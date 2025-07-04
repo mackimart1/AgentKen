@@ -25,8 +25,6 @@ def scratchpad(
         - 'clear_all': Returns a confirmation message (str).
         - Invalid action or missing args: Returns an error message.
     """
-    global _scratchpad_storage
-
     if action == "write":
         if key is None or value is None:
             return "Error: 'write' action requires both 'key' and 'value' parameters."

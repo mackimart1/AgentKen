@@ -103,8 +103,6 @@ def ner_tool(text: str) -> dict:
         Returns {'error': 'spaCy model 'en_core_web_sm' not available or failed to load.'} if the model isn't loaded.
         Returns {'entities': []} if no entities are found or input is empty/invalid.
     """
-    global nlp, _model_loaded
-
     if not _model_loaded or nlp is None:
         # Maybe try one more time? Or rely on the initial load attempt.
         # For simplicity, we rely on the initial load attempt status.

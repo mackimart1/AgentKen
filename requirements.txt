@@ -1,7 +1,7 @@
 # Core Dependencies
 langchain-core>=0.1.0
 langgraph>=0.0.20
-pydantic>=1.7.3,<2.0.0
+pydantic>=2.0.0,<3.0.0
 typing-extensions>=4.0.0
 
 # Testing Framework
@@ -37,7 +37,7 @@ flask-login>=0.6.0
 
 # Authentication (for future integration)
 firebase-admin>=6.0.0
-clerk-sdk-python>=0.1.0
+# clerk-sdk-python>=0.1.0  # Temporarily disabled due to pydantic v1 dependency conflict
 
 # Database (for future persistence)
 sqlalchemy>=2.0.0

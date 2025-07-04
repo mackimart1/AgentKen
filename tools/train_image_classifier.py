@@ -45,29 +45,56 @@ def train_image_classifier(
         - 'training_history': A dictionary containing training history (loss, accuracy, val_loss, val_accuracy).
         - 'error': An error message if training failed, otherwise None.
     """
-    # --- Internal Data Loading (Needs Implementation based on paths) ---
-    # TODO: Implement logic here to create train_generator and validation_generator
-    #       from train_data_dir and validation_data_dir using tf.keras.preprocessing.image.ImageDataGenerator
-    # Example (needs refinement based on actual data structure and preprocessing needs):
-    # train_datagen = tf.keras.preprocessing.image.ImageDataGenerator(...)
-    # validation_datagen = tf.keras.preprocessing.image.ImageDataGenerator(...)
-    # train_generator = train_datagen.flow_from_directory(train_data_dir, ...)
-    # validation_generator = validation_datagen.flow_from_directory(validation_data_dir, ...)
-    # --- End Internal Data Loading ---
-
-    # Placeholder check until internal loading is implemented
-    # This check will always fail now as strings don't have 'num_classes'
-    # Remove or adapt this check once internal loading is done.
-    # if not hasattr(train_generator, 'num_classes') or not hasattr(validation_generator, 'num_classes'):
-    #      return {"saved_model_path": None, "training_history": None, "error": "Internal data loading not yet implemented for train/validation directories."}
-
-    # --- TEMPORARY EARLY EXIT (Remove after implementing internal loading) ---
-    return {
-        "saved_model_path": None,
-        "training_history": None,
-        "error": "Tool signature fixed, but internal data loading from paths needs implementation.",
-    }
-    # --- END TEMPORARY EARLY EXIT ---
+    # Create data generators from directory paths
+    try:
+        # Create data generators
+        train_datagen = tf.keras.preprocessing.image.ImageDataGenerator(
+            rescale=1.0/255.0,
+            rotation_range=20,
+            width_shift_range=0.2,
+            height_shift_range=0.2,
+            horizontal_flip=True,
+            fill_mode='nearest'
+        )
+        
+        validation_datagen = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1.0/255.0)
+        
+        # Create generators from directories
+        train_generator = train_datagen.flow_from_directory(
+            train_data_dir,
+            target_size=tuple(image_size),
+            batch_size=32,
+            class_mode='categorical'
+        )
+        
+        validation_generator = validation_datagen.flow_from_directory(
+            validation_data_dir,
+            target_size=tuple(image_size),
+            batch_size=32,
+            class_mode='categorical'
+        )
+        
+        # Validate that we have data
+        if train_generator.samples == 0:
+            return {
+                "saved_model_path": None,
+                "training_history": None,
+                "error": f"No training images found in {train_data_dir}"
+            }
+            
+        if validation_generator.samples == 0:
+            return {
+                "saved_model_path": None,
+                "training_history": None,
+                "error": f"No validation images found in {validation_data_dir}"
+            }
+            
+    except Exception as e:
+        return {
+            "saved_model_path": None,
+            "training_history": None,
+            "error": f"Error loading data from directories: {str(e)}"
+        }
 
     try:  # Keep the rest of the try block, but it won't be reached yet
         if base_model_name not in BASE_MODEL_MAP:
