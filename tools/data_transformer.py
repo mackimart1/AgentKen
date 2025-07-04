@@ -1,6 +1,6 @@
-
 from langchain_core.tools import tool
 from typing import Any
+
 
 @tool
 def data_transformer(data: Any, transformation_type: str) -> Any:
@@ -30,8 +30,12 @@ def data_transformer(data: Any, transformation_type: str) -> Any:
         return data.lower()
     elif transformation_type == "reverse_string":
         if not isinstance(data, str):
-            raise TypeError("Data must be a string for 'reverse_string' transformation.")
+            raise TypeError(
+                "Data must be a string for 'reverse_string' transformation."
+            )
         return data[::-1]
     else:
-        raise ValueError(f"Unsupported transformation type: {transformation_type}. "
-                         "Supported types: 'to_string', 'uppercase', 'lowercase', 'reverse_string'.")
+        raise ValueError(
+            f"Unsupported transformation type: {transformation_type}. "
+            "Supported types: 'to_string', 'uppercase', 'lowercase', 'reverse_string'."
+        )

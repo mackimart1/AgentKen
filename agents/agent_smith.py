@@ -6,6 +6,7 @@ It plans the agent design, requests necessary tools from ToolMaker, writes the
 agent code and tests, formats/lints the code, runs the tests, and reports
 the outcome back to Hermes. Uses LangGraph for its internal workflow.
 """
+
 from typing import Literal, Optional, List, Dict, Any
 import os
 import logging
@@ -27,8 +28,10 @@ logger = logging.getLogger(__name__)
 # Initialize memory manager
 memory_manager_instance = memory_manager.MemoryManager()
 
+
 class AgentCreationPhase(Enum):
     """Enum to track the current phase of agent creation."""
+
     PLANNING = "planning"
     TOOL_CREATION = "tool_creation"
     AGENT_WRITING = "agent_writing"
@@ -38,9 +41,11 @@ class AgentCreationPhase(Enum):
     COMPLETE = "complete"
     FAILED = "failed"
 
+
 @dataclass
 class AgentCreationState:
     """Enhanced state tracking for agent creation process."""
+
     is_complete: bool = False
     agent_name: Optional[str] = None
     start_time: datetime = field(default_factory=datetime.now)
@@ -74,11 +79,14 @@ class AgentCreationState:
         current_time = datetime.now()
         total_duration = (current_time - self.start_time).total_seconds()
         inactivity_duration = (current_time - self.last_activity).total_seconds()
-        
+
         if total_duration > self.max_duration:
             return True, f"Agent creation timed out after {self.max_duration} seconds"
         if inactivity_duration > self.max_inactivity:
-            return True, f"Agent creation stalled after {self.max_inactivity} seconds of inactivity"
+            return (
+                True,
+                f"Agent creation stalled after {self.max_inactivity} seconds of inactivity",
+            )
         return False, None
 
     def should_retry(self) -> bool:
@@ -92,6 +100,7 @@ class AgentCreationState:
     def reset_retry(self):
         """Reset the retry counter for a new operation."""
         self.retry_count = 0
+
 
 # Initialize completion state
 creation_state = AgentCreationState()
@@ -191,13 +200,14 @@ If you encounter errors, analyze them carefully and fix the underlying issues.
 If you need to retry an operation, clearly state what you're retrying and why.
 """
 
+
 class AgentSmithWorkflow:
     """Enhanced workflow management for Agent Smith."""
-    
+
     def __init__(self, tools: List[Any]):
         self.tools = tools
         self.workflow = self._build_workflow()
-    
+
     def _build_workflow(self) -> StateGraph:
         """Build the LangGraph workflow."""
         workflow = StateGraph(MessagesState)
@@ -207,39 +217,41 @@ class AgentSmithWorkflow:
         workflow.add_conditional_edges("reasoning", self._check_for_tool_calls)
         workflow.add_edge("tools", "reasoning")
         return workflow.compile()
-    
+
     def _reasoning_node(self, state: MessagesState) -> Dict[str, Any]:
         """Enhanced reasoning step with better error handling."""
-        logger.info(f"Agent Smith reasoning in phase: {creation_state.current_phase.value}")
-        
+        logger.info(
+            f"Agent Smith reasoning in phase: {creation_state.current_phase.value}"
+        )
+
         # Check for timeout conditions
         is_timeout, timeout_message = creation_state.check_timeout()
         if is_timeout:
             creation_state.advance_phase(AgentCreationPhase.FAILED)
             return {"messages": [AIMessage(content=f"Error: {timeout_message}")]}
-        
+
         # Update activity timestamp
         creation_state.update_activity()
-        
+
         # Add context about current phase to the conversation
         phase_context = self._get_phase_context()
-        messages = state['messages'] + [SystemMessage(content=phase_context)]
-        
+        messages = state["messages"] + [SystemMessage(content=phase_context)]
+
         try:
             tooled_up_model = config.default_langchain_model.bind_tools(self.tools)
             response = tooled_up_model.invoke(messages)
-            
+
             # Process the response
             self._process_response(response)
-            
+
             return {"messages": [response]}
-            
+
         except Exception as e:
             error_msg = f"Error in reasoning step: {str(e)}"
             creation_state.add_error(error_msg)
             logger.error(error_msg, exc_info=True)
             return {"messages": [AIMessage(content=f"Internal error: {error_msg}")]}
-    
+
     def _get_phase_context(self) -> str:
         """Get context about the current phase for the LLM."""
         context = f"""
@@ -248,33 +260,36 @@ FILES WRITTEN: {', '.join(creation_state.files_written) if creation_state.files_
 TOOLS REQUESTED: {', '.join(creation_state.tools_requested) if creation_state.tools_requested else 'None'}
 RETRY COUNT: {creation_state.retry_count}/{creation_state.max_retries}
 """
-        
+
         if creation_state.errors:
             context += f"\nRECENT ERRORS: {'; '.join(creation_state.errors[-3:])}"
-        
+
         return context
-    
+
     def _process_response(self, response: AIMessage):
         """Process the AI response to update state accordingly."""
         if not isinstance(response, AIMessage):
             return
-        
+
         content = self._extract_content(response)
-        
+
         # Track file creation from tool calls
-        if hasattr(response, 'tool_calls') and response.tool_calls:
+        if hasattr(response, "tool_calls") and response.tool_calls:
             for tool_call in response.tool_calls:
-                if tool_call.get('name') == 'write_to_file':
-                    file_path = tool_call.get('args', {}).get('file', '')
+                if tool_call.get("name") == "write_to_file":
+                    file_path = tool_call.get("args", {}).get("file", "")
                     if file_path and file_path not in creation_state.files_written:
                         creation_state.files_written.append(file_path)
                         logger.info(f"Tracked file creation: {file_path}")
-        
+
         # Check for completion message
-        if "successfully created, formatted, linted, and tested agent" in content.lower():
+        if (
+            "successfully created, formatted, linted, and tested agent"
+            in content.lower()
+        ):
             creation_state.advance_phase(AgentCreationPhase.COMPLETE)
             creation_state.is_complete = True
-            
+
             # Extract agent name
             try:
                 if "agent: '" in content:
@@ -282,41 +297,53 @@ RETRY COUNT: {creation_state.retry_count}/{creation_state.max_retries}
                     creation_state.agent_name = name_part.split("'")[0]
             except (IndexError, AttributeError):
                 logger.warning("Could not extract agent name from completion message")
-    
+
     def _extract_content(self, response: AIMessage) -> str:
         """Extract string content from AI message."""
         content = response.content
         if isinstance(content, list):
-            content = next((item for item in content if isinstance(item, str)), str(content))
+            content = next(
+                (item for item in content if isinstance(item, str)), str(content)
+            )
         return content if isinstance(content, str) else ""
-    
+
     def _check_for_tool_calls(self, state: MessagesState) -> Literal["tools", END]:
         """Enhanced tool call checking with state management."""
         messages = state["messages"]
         last_message = messages[-1] if messages else None
-        
+
         # Check for completion state
-        if creation_state.is_complete or creation_state.current_phase == AgentCreationPhase.COMPLETE:
-            logger.info(f"Agent creation completed successfully: {creation_state.agent_name}")
+        if (
+            creation_state.is_complete
+            or creation_state.current_phase == AgentCreationPhase.COMPLETE
+        ):
+            logger.info(
+                f"Agent creation completed successfully: {creation_state.agent_name}"
+            )
             return END
-        
+
         # Check for failure state
         if creation_state.current_phase == AgentCreationPhase.FAILED:
             logger.error("Agent creation failed")
             return END
-        
+
         # Check for timeout or error messages
         if isinstance(last_message, AIMessage):
             content = self._extract_content(last_message)
             if "Error:" in content or "timeout" in content.lower():
                 creation_state.advance_phase(AgentCreationPhase.FAILED)
                 return END
-        
+
         # Check for tool calls
-        if last_message and hasattr(last_message, 'tool_calls') and last_message.tool_calls:
+        if (
+            last_message
+            and hasattr(last_message, "tool_calls")
+            and last_message.tool_calls
+        ):
             return "tools"
-        
+
         return END
+
 
 def _ensure_directories():
     """Ensure required directories exist."""
@@ -326,42 +353,49 @@ def _ensure_directories():
             os.makedirs(directory)
             logger.info(f"Created missing directory: {directory}")
 
+
 def _load_and_validate_tools() -> List[Any]:
     """Load and validate all required tools."""
     # Dynamically load all tools
     tools = utils.all_tool_functions()
-    
+
     # Get loaded tool names
     loaded_tool_names = set()
     for tool in tools:
-        if hasattr(tool, 'name'):
+        if hasattr(tool, "name"):
             loaded_tool_names.add(tool.name)
         else:
             logger.warning(f"Tool object {type(tool)} missing '.name' attribute")
-    
+
     # Required tools for Agent Smith
     required_tools = {
-        "write_to_file", "read_file", "delete_file", "run_shell_command",
-        "assign_agent_to_task", "list_available_agents"
+        "write_to_file",
+        "read_file",
+        "delete_file",
+        "run_shell_command",
+        "assign_agent_to_task",
+        "list_available_agents",
     }
-    
+
     # Check for missing tools and attempt manual loading
     missing_tools = required_tools - loaded_tool_names
     if missing_tools:
         logger.warning(f"Missing required tools: {missing_tools}")
-        
+
         # Manual tool imports
         tool_imports = {
             "write_to_file": "tools.write_to_file",
-            "read_file": "tools.read_file", 
+            "read_file": "tools.read_file",
             "delete_file": "tools.delete_file",
             "run_shell_command": "tools.run_shell_command",
             "assign_agent_to_task": "tools.assign_agent_to_task",
-            "list_available_agents": "tools.list_available_agents"
+            "list_available_agents": "tools.list_available_agents",
         }
-        
-        tools_dict = {getattr(t, 'name', str(t)): t for t in tools if hasattr(t, 'name')}
-        
+
+        tools_dict = {
+            getattr(t, "name", str(t)): t for t in tools if hasattr(t, "name")
+        }
+
         for tool_name in missing_tools:
             if tool_name in tool_imports:
                 try:
@@ -372,16 +406,18 @@ def _load_and_validate_tools() -> List[Any]:
                     logger.info(f"Manually loaded tool: {tool_name}")
                 except ImportError as e:
                     logger.error(f"Failed to load tool {tool_name}: {e}")
-        
+
         tools = list(tools_dict.values())
-    
+
     logger.info(f"Loaded {len(tools)} tools for Agent Smith")
     return tools
+
 
 # Initialize the workflow
 _ensure_directories()
 tools = _load_and_validate_tools()
 workflow_manager = AgentSmithWorkflow(tools)
+
 
 def agent_smith(task: str) -> Dict[str, Any]:
     """
@@ -402,76 +438,82 @@ def agent_smith(task: str) -> Dict[str, Any]:
     # Reset state for new task
     global creation_state
     creation_state = AgentCreationState()
-    
+
     logger.info(f"Starting agent creation task: {task}")
-    
+
     try:
         # Execute the workflow
-        final_state = workflow_manager.workflow.invoke({
-            "messages": [
-                SystemMessage(content=system_prompt),
-                HumanMessage(content=task)
-            ]
-        })
-        
+        final_state = workflow_manager.workflow.invoke(
+            {
+                "messages": [
+                    SystemMessage(content=system_prompt),
+                    HumanMessage(content=task),
+                ]
+            }
+        )
+
         # Extract final message
         last_message_content = "No response generated"
-        if final_state and 'messages' in final_state and final_state['messages']:
-            last_message = final_state['messages'][-1]
+        if final_state and "messages" in final_state and final_state["messages"]:
+            last_message = final_state["messages"][-1]
             last_message_content = workflow_manager._extract_content(last_message)
-        
+
         # Determine final status
-        if creation_state.is_complete and creation_state.current_phase == AgentCreationPhase.COMPLETE:
-            status = 'success'
+        if (
+            creation_state.is_complete
+            and creation_state.current_phase == AgentCreationPhase.COMPLETE
+        ):
+            status = "success"
             result_data = creation_state.agent_name
         else:
-            status = 'failure'
+            status = "failure"
             result_data = None
             if not creation_state.errors:
                 creation_state.add_error("Agent creation incomplete - unknown reason")
-        
+
         # Store memory of the creation attempt
         try:
             import json
+
             memory_data = {
-                "task": task, 
+                "task": task,
                 "status": status,
                 "phase": creation_state.current_phase.value,
                 "files": creation_state.files_written,
-                "errors": creation_state.errors
+                "errors": creation_state.errors,
             }
-            
+
             # Convert to JSON string to ensure serialization compatibility
             memory_json = json.dumps(memory_data)
-            
+
             memory_manager_instance.add_memory(
                 key=f"agent_creation_{datetime.now().timestamp()}",
                 value=memory_json,
                 memory_type="agent_creation_log",
-                agent_name="agent_smith"
+                agent_name="agent_smith",
             )
         except Exception as memory_error:
             logger.warning(f"Failed to store memory: {memory_error}")
-        
+
         return {
             "status": status,
             "result": result_data,
             "message": last_message_content,
             "phase": creation_state.current_phase.value,
             "files_created": creation_state.files_written.copy(),
-            "errors": creation_state.errors.copy()
+            "errors": creation_state.errors.copy(),
         }
-        
+
     except Exception as e:
         error_msg = f"Critical error in agent_smith: {str(e)}"
         logger.error(error_msg, exc_info=True)
         creation_state.add_error(error_msg)
-        
+
         return {
-            "status": 'failure',
+            "status": "failure",
             "result": None,
             "message": error_msg,
             "phase": creation_state.current_phase.value,
             "files_created": creation_state.files_written.copy(),
-            "errors": creation_state.errors.copy()
+            "errors": creation_state.errors.copy(),
         }

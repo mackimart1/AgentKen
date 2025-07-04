@@ -1,6 +1,6 @@
-
 from langchain_core.tools import tool
 from typing import Dict, Any
+
 
 @tool
 def organize_kb(identifier: str, organization_info: Dict[str, Any]) -> str:

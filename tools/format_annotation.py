@@ -1,6 +1,7 @@
 import json
 from langchain_core.tools import tool
 
+
 @tool
 def format_annotation(log_entry: str, annotation: str) -> str:
     """

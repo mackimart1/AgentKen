@@ -12,6 +12,7 @@ You have tools to manage files, run shell commands, and collaborate with other a
 """
 
 from tools.write_to_file import write_to_file
+
 # Removed import for non-existent overwrite_file tool
 from tools.delete_file import delete_file
 from tools.read_file import read_file
@@ -26,20 +27,22 @@ tools = [
     read_file,
     run_shell_command,
     assign_agent_to_task,
-    list_available_agents
+    list_available_agents,
 ]
+
 
 def reasoning(state: MessagesState):
     print("software_engineer is thinking...")
-    messages = state['messages']
+    messages = state["messages"]
     tooled_up_model = config.default_langchain_model.bind_tools(tools)
     response = tooled_up_model.invoke(messages)
     return {"messages": [response]}
 
+
 def check_for_tool_calls(state: MessagesState) -> Literal["tools", END]:
-    messages = state['messages']
+    messages = state["messages"]
     last_message = messages[-1]
-    
+
     if last_message.tool_calls:
         if not last_message.content.strip() == "":
             print("software_engineer thought this:")
@@ -48,8 +51,9 @@ def check_for_tool_calls(state: MessagesState) -> Literal["tools", END]:
         print("software_engineer is acting by invoking these tools:")
         print([tool_call["name"] for tool_call in last_message.tool_calls])
         return "tools"
-    
+
     return END
+
 
 acting = ToolNode(tools)
 
@@ -61,7 +65,7 @@ workflow.add_conditional_edges(
     "reasoning",
     check_for_tool_calls,
 )
-workflow.add_edge("tools", 'reasoning')
+workflow.add_edge("tools", "reasoning")
 
 graph = workflow.compile()
 

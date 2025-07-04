@@ -4,28 +4,31 @@ Agent Template System
 Provides templates and utilities for creating new agents with consistent
 structure, documentation, and best practices.
 """
+
 import os
 import re
 from typing import Dict, Any, Optional
 from datetime import datetime
 
+
 class AgentTemplate:
     """Template for creating new agents with consistent structure"""
-    
+
     @staticmethod
-    def generate_agent_code(agent_name: str, description: str, capabilities: list, 
-                           author: str, user_id: str) -> str:
+    def generate_agent_code(
+        agent_name: str, description: str, capabilities: list, author: str, user_id: str
+    ) -> str:
         """Generate agent code from template"""
-        
+
         # Convert agent_name to snake_case for filename
-        agent_filename = agent_name.lower().replace(' ', '_').replace('-', '_')
-        
+        agent_filename = agent_name.lower().replace(" ", "_").replace("-", "_")
+
         # Generate capabilities string
-        capabilities_str = '\n'.join([f'    - {cap}' for cap in capabilities])
-        
+        capabilities_str = "\n".join([f"    - {cap}" for cap in capabilities])
+
         # Generate imports based on capabilities
         imports = AgentTemplate._generate_imports(capabilities)
-        
+
         template = f'''"""
 {agent_name}: {description}
 
@@ -257,39 +260,41 @@ if __name__ == "__main__":
     result = {agent_filename}(test_task)
     print(f"Test result: {{result}}")
 '''
-        
+
         return template
-    
+
     @staticmethod
     def _generate_imports(capabilities: list) -> str:
         """Generate appropriate imports based on agent capabilities"""
         imports = []
-        
+
         # Add capability-specific imports
         for capability in capabilities:
             capability_lower = capability.lower()
-            if 'web' in capability_lower or 'search' in capability_lower:
-                imports.append("from tools.duck_duck_go_web_search import duck_duck_go_web_search")
-            elif 'file' in capability_lower or 'write' in capability_lower:
+            if "web" in capability_lower or "search" in capability_lower:
+                imports.append(
+                    "from tools.duck_duck_go_web_search import duck_duck_go_web_search"
+                )
+            elif "file" in capability_lower or "write" in capability_lower:
                 imports.append("from tools.write_to_file import write_to_file")
                 imports.append("from tools.read_file import read_file")
-            elif 'terminal' in capability_lower or 'shell' in capability_lower:
+            elif "terminal" in capability_lower or "shell" in capability_lower:
                 imports.append("from tools.run_shell_command import run_shell_command")
-            elif 'memory' in capability_lower:
+            elif "memory" in capability_lower:
                 imports.append("from tools.memory_manager import memory_manager")
-        
+
         # Remove duplicates and sort
         imports = list(set(imports))
         imports.sort()
-        
-        return '\n'.join(imports)
-    
+
+        return "\n".join(imports)
+
     @staticmethod
     def generate_test_code(agent_name: str, capabilities: list) -> str:
         """Generate test code for the agent"""
-        
-        agent_filename = agent_name.lower().replace(' ', '_').replace('-', '_')
-        
+
+        agent_filename = agent_name.lower().replace(" ", "_").replace("-", "_")
+
         template = f'''"""
 Tests for {agent_name} agent
 
@@ -376,20 +381,21 @@ class Test{agent_name.replace(' ', '').replace('-', '')}(unittest.TestCase):
 if __name__ == '__main__':
     unittest.main()
 '''
-        
+
         return template
-    
+
     @staticmethod
-    def generate_manifest_entry(agent_name: str, description: str, capabilities: list,
-                               author: str, user_id: str) -> Dict[str, Any]:
+    def generate_manifest_entry(
+        agent_name: str, description: str, capabilities: list, author: str, user_id: str
+    ) -> Dict[str, Any]:
         """Generate manifest entry for the agent"""
         return {
-            "name": agent_name.lower().replace(' ', '_').replace('-', '_'),
+            "name": agent_name.lower().replace(" ", "_").replace("-", "_"),
             "description": description,
             "capabilities": capabilities,
             "author": author,
             "created_by": user_id,
             "created_at": datetime.now().isoformat(),
             "version": "1.0.0",
-            "status": "active"
-        } 
+            "status": "active",
+        }

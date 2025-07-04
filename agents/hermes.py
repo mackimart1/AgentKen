@@ -5,19 +5,28 @@ Handles user interaction, goal understanding, task planning, agent delegation
 (using assign_agent_to_task), and result aggregation. Uses LangGraph to manage
 its internal state machine and interaction flow.
 """
-from typing import Literal, Sequence, TypedDict, Annotated, Optional # Import Optional
+
+from typing import Literal, Sequence, TypedDict, Annotated, Optional  # Import Optional
 import operator
 import datetime
 
-from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, ToolMessage, BaseMessage, AIMessageChunk
-from langgraph.graph import StateGraph, END # Removed MessagesState import
+from langchain_core.messages import (
+    HumanMessage,
+    SystemMessage,
+    AIMessage,
+    ToolMessage,
+    BaseMessage,
+    AIMessageChunk,
+)
+from langgraph.graph import StateGraph, END  # Removed MessagesState import
 from langgraph.prebuilt import ToolNode
 
 import utils
 import config
-import csv # For logging training data
-import os # For checking file existence
-import logging # Use logging for info messages
+import csv  # For logging training data
+import os  # For checking file existence
+import logging  # Use logging for info messages
+
 # OpenRouter uses standard HTTP errors, not Google-specific exceptions
 from requests.exceptions import HTTPError, RequestException
 
@@ -27,6 +36,7 @@ logger = logging.getLogger(__name__)
 # Initialize memory manager (with error handling)
 try:
     import memory_manager
+
     memory_manager_instance = memory_manager.MemoryManager()
     logger.info("Memory manager initialized successfully")
 except ImportError as e:
@@ -38,6 +48,7 @@ except Exception as e:
 
 from tools.list_available_agents import list_available_agents
 from tools.assign_agent_to_task import assign_agent_to_task
+
 # from tools.predict_agent import predict_agent # Import the new prediction tool - commented out due to dependency issues
 
 system_prompt = f"""You are Hermes, a ReAct agent that achieves goals for the user.
@@ -84,17 +95,19 @@ Further guidance:
 """
 
 # Load tools using the refactored manifest-based function
-# Note: predict_agent might not be loaded if its models are missing, 
+# Note: predict_agent might not be loaded if its models are missing,
 # but all_tool_functions handles this. Hermes should check tool availability if needed.
 tools = utils.all_tool_functions()
 # Safely get tool names for logging
 tool_names_for_log = []
 for t in tools:
-    if hasattr(t, 'name'):
+    if hasattr(t, "name"):
         tool_names_for_log.append(t.name)
     else:
         # Log the type if name is missing, might indicate an issue
-        logger.warning(f"Tool object of type {type(t)} is missing '.name' attribute during Hermes init.")
+        logger.warning(
+            f"Tool object of type {type(t)} is missing '.name' attribute during Hermes init."
+        )
         tool_names_for_log.append(f"[Unknown Tool Type: {type(t).__name__}]")
 logger.info(f"Hermes initialized with tools: {tool_names_for_log}")
 
@@ -103,7 +116,7 @@ logger.info(f"Hermes initialized with tools: {tool_names_for_log}")
 class HermesState(TypedDict):
     messages: Annotated[Sequence[BaseMessage], operator.add]
     plan_step_count: int
-    initial_goal: Optional[str] # Use Optional[str] for compatibility
+    initial_goal: Optional[str]  # Use Optional[str] for compatibility
 
 
 def feedback_and_wait_on_human_input(state: HermesState) -> dict:
@@ -127,13 +140,17 @@ def feedback_and_wait_on_human_input(state: HermesState) -> dict:
         last_ai_content = state["messages"][-1].content
         if isinstance(last_ai_content, list) and len(last_ai_content) > 0:
             # If content is a list (like from Gemini function calling), print only the first part (text)
-            message_to_human = last_ai_content[0] if isinstance(last_ai_content[0], str) else str(last_ai_content[0])
+            message_to_human = (
+                last_ai_content[0]
+                if isinstance(last_ai_content[0], str)
+                else str(last_ai_content[0])
+            )
         elif isinstance(last_ai_content, str):
-             # If it's just a string, use it directly
-             message_to_human = last_ai_content
+            # If it's just a string, use it directly
+            message_to_human = last_ai_content
         else:
-             # Fallback for unexpected content types
-             message_to_human = str(last_ai_content)
+            # Fallback for unexpected content types
+            message_to_human = str(last_ai_content)
     print(message_to_human)
 
     # Get user input
@@ -144,18 +161,20 @@ def feedback_and_wait_on_human_input(state: HermesState) -> dict:
     # Prepare state update
     update_dict = {
         "messages": [HumanMessage(content=human_input)],
-        "plan_step_count": 0 # Reset step count on new user input
+        "plan_step_count": 0,  # Reset step count on new user input
     }
 
     # Capture initial goal if not already set
-    if not state.get('initial_goal'):
+    if not state.get("initial_goal"):
         update_dict["initial_goal"] = human_input
         print(f"(Initial goal captured: '{human_input[:50]}...')")
 
     return update_dict
 
 
-def check_for_exit(state: HermesState) -> Literal["reasoning", END]: # Updated state type
+def check_for_exit(
+    state: HermesState,
+) -> Literal["reasoning", END]:  # Updated state type
     """
     Checks the last message from the user to see if they typed 'exit'.
 
@@ -166,7 +185,10 @@ def check_for_exit(state: HermesState) -> Literal["reasoning", END]: # Updated s
         Literal["reasoning", END]: The next node to transition to.
     """
     last_message = state["messages"][-1]
-    if isinstance(last_message, HumanMessage) and last_message.content.lower() == "exit":
+    if (
+        isinstance(last_message, HumanMessage)
+        and last_message.content.lower() == "exit"
+    ):
         return END
     else:
         return "reasoning"
@@ -174,7 +196,7 @@ def check_for_exit(state: HermesState) -> Literal["reasoning", END]: # Updated s
 
 def reasoning(state: HermesState) -> dict:
     """
-    The core reasoning step. Checks for early stopping, then memory shortcuts, 
+    The core reasoning step. Checks for early stopping, then memory shortcuts,
     then invokes the LLM with the current message history and tools.
 
     Args:
@@ -185,32 +207,54 @@ def reasoning(state: HermesState) -> dict:
     """
     print()
     print("hermes is thinking...")
-    current_messages, plan_step_count, initial_goal = get_state_values(state) # Use helper
-    
+    current_messages, plan_step_count, initial_goal = get_state_values(
+        state
+    )  # Use helper
+
     # Add acknowledgment detection at the start
     if current_messages and isinstance(current_messages[-1], HumanMessage):
         last_human_msg = current_messages[-1].content.lower().strip()
         # Check if this is a simple acknowledgment
-        acknowledgments = {"ok", "okay", "alright", "got it", "understood", "proceed", "continue", "great"}
+        acknowledgments = {
+            "ok",
+            "okay",
+            "alright",
+            "got it",
+            "understood",
+            "proceed",
+            "continue",
+            "great",
+        }
         if last_human_msg in acknowledgments:
             # Check if we're in the middle of a task
             for msg in reversed(current_messages[:-1]):
                 if isinstance(msg, AIMessage) and "waiting" in msg.content.lower():
                     # Skip full reasoning for acknowledgments during waiting periods
-                    return {"messages": [AIMessage(content="Continuing with the current task...")]}
+                    return {
+                        "messages": [
+                            AIMessage(content="Continuing with the current task...")
+                        ]
+                    }
                 break
-    
+
     # --- Early Stopping Check ---
-    EARLY_STOP_THRESHOLD = 3 # Define the threshold
+    EARLY_STOP_THRESHOLD = 3  # Define the threshold
     if plan_step_count >= EARLY_STOP_THRESHOLD:
-        print(f"Plan step count ({plan_step_count}) reached threshold ({EARLY_STOP_THRESHOLD}). Evaluating plan viability...")
+        print(
+            f"Plan step count ({plan_step_count}) reached threshold ({EARLY_STOP_THRESHOLD}). Evaluating plan viability..."
+        )
         if not initial_goal:
-             print("Warning: Initial goal not found in state for early stopping evaluation.")
-             # Proceed without evaluation if goal is missing
+            print(
+                "Warning: Initial goal not found in state for early stopping evaluation."
+            )
+            # Proceed without evaluation if goal is missing
         else:
             # Prepare limited history for evaluation prompt
             recent_history_str = "\n".join(
-                [f"{type(m).__name__}: {m.content[:200]}..." for m in current_messages[-6:]] # Last ~3 turns
+                [
+                    f"{type(m).__name__}: {m.content[:200]}..."
+                    for m in current_messages[-6:]
+                ]  # Last ~3 turns
             )
             evaluation_prompt = f"""Analyze the likelihood of success for the current plan based on the initial goal and recent interactions.
 Initial Goal: {initial_goal}
@@ -221,46 +265,67 @@ Based ONLY on the provided goal and history summary, is the current plan likely 
 Respond ONLY with 'PROCEED' or 'STOP: [Brief reason, e.g., repeated tool failures, agent unable to complete subtask]'."""
 
             evaluation_successful = False
-            while not evaluation_successful: # Loop for quota handling
+            while not evaluation_successful:  # Loop for quota handling
                 try:
                     if config.default_langchain_model is None:
-                         raise ValueError("Default language model not initialized for evaluation.")
-                    
-                    evaluation_response = config.default_langchain_model.invoke([SystemMessage(content=evaluation_prompt)])
+                        raise ValueError(
+                            "Default language model not initialized for evaluation."
+                        )
+
+                    evaluation_response = config.default_langchain_model.invoke(
+                        [SystemMessage(content=evaluation_prompt)]
+                    )
                     evaluation_text = evaluation_response.content.strip()
-                    evaluation_successful = True # Mark success
+                    evaluation_successful = True  # Mark success
 
                     if evaluation_text.startswith("STOP:"):
                         reason = evaluation_text.replace("STOP:", "").strip()
                         print(f"Evaluation result: STOP. Reason: {reason}")
                         stop_message = f"Stopping task execution early after {plan_step_count} steps: {reason}. Returning control."
                         # Return message to be sent back to user via feedback node
-                        return {"messages": [AIMessage(content=stop_message)]} 
+                        return {"messages": [AIMessage(content=stop_message)]}
                     elif evaluation_text == "PROCEED":
                         print("Evaluation result: PROCEED.")
                         # Continue to normal reasoning flow
                     else:
-                        print(f"Unexpected response from evaluation check: {evaluation_text}. Proceeding.")
+                        print(
+                            f"Unexpected response from evaluation check: {evaluation_text}. Proceeding."
+                        )
                         # Continue to normal reasoning flow
 
                 except (HTTPError, RequestException) as eval_e:
                     print("\n--------------------------------------------------")
-                    print(f"OpenRouter API Error during early stopping evaluation for Hermes: {eval_e}")
+                    print(
+                        f"OpenRouter API Error during early stopping evaluation for Hermes: {eval_e}"
+                    )
                     print("Please enter a new OpenRouter API Key to continue:")
                     new_key_eval = input("> ").strip()
-                    if not new_key_eval: print("No key entered. Cannot evaluate plan."); break 
-                    try: config.reinitialize_openrouter_model(new_key_eval); print("Model reinitialized. Retrying evaluation...")
-                    except Exception as config_eval_e: print(f"Failed to reinitialize OpenRouter model: {config_eval_e}"); break
+                    if not new_key_eval:
+                        print("No key entered. Cannot evaluate plan.")
+                        break
+                    try:
+                        config.reinitialize_openrouter_model(new_key_eval)
+                        print("Model reinitialized. Retrying evaluation...")
+                    except Exception as config_eval_e:
+                        print(
+                            f"Failed to reinitialize OpenRouter model: {config_eval_e}"
+                        )
+                        break
                 except Exception as eval_e_other:
-                     logger.error(f"An unexpected error occurred during Hermes early stopping evaluation: {eval_e_other}", exc_info=True)
-                     print("Error during evaluation check. Proceeding with main reasoning.")
-                     evaluation_successful = True # Break loop on unexpected error
+                    logger.error(
+                        f"An unexpected error occurred during Hermes early stopping evaluation: {eval_e_other}",
+                        exc_info=True,
+                    )
+                    print(
+                        "Error during evaluation check. Proceeding with main reasoning."
+                    )
+                    evaluation_successful = True  # Break loop on unexpected error
 
     # --- End Early Stopping Check ---
 
-    # --- Extract current task/query --- 
-    query_context = "Initial state" # Default
-    task_description = "General context" # Default
+    # --- Extract current task/query ---
+    query_context = "Initial state"  # Default
+    task_description = "General context"  # Default
     if current_messages:
         # Find the most recent human message for the task context
         for msg in reversed(current_messages):
@@ -268,19 +333,23 @@ Respond ONLY with 'PROCEED' or 'STOP: [Brief reason, e.g., repeated tool failure
                 query_context = msg.content
                 task_description = msg.content
                 break
-        else: # If no human message, use the last message content
-             query_context = current_messages[-1].content if current_messages[-1].content else "Previous action context"
-             task_description = query_context # Approximate task
+        else:  # If no human message, use the last message content
+            query_context = (
+                current_messages[-1].content
+                if current_messages[-1].content
+                else "Previous action context"
+            )
+            task_description = query_context  # Approximate task
 
     # --- Memory Retrieval ---
     print(f"Retrieving memories for task: {task_description[:100]}...")
     # Retrieve memories, sorting by importance by default
     relevant_memories = memory_manager_instance.retrieve_memories(
         memory_type=None,  # Don't filter by type
-        agent_name=None,   # Don't filter by agent
+        agent_name=None,  # Don't filter by agent
         min_importance=5,  # Get memories with importance >= 5
-        limit=5           # Get up to 5 memories
-    ) 
+        limit=5,  # Get up to 5 memories
+    )
 
     # --- Shortcut Check ---
     shortcut_found = False
@@ -289,7 +358,9 @@ Respond ONLY with 'PROCEED' or 'STOP: [Brief reason, e.g., repeated tool failure
     if relevant_memories:
         print("Checking memory for shortcuts...")
         # Format memories properly by extracting their values
-        formatted_memories = "\n".join([f"- {mem['value']}" for mem in relevant_memories])
+        formatted_memories = "\n".join(
+            [f"- {mem['value']}" for mem in relevant_memories]
+        )
         shortcut_prompt = f"""Analyze the following task and retrieved memories.
 Task: {task_description}
 Memories:
@@ -301,38 +372,54 @@ Respond ONLY with:
 - "NO SHORTCUT" if no clear shortcut is found in the memories."""
 
         shortcut_check_successful = False
-        while not shortcut_check_successful: # Loop for quota handling on shortcut check
+        while (
+            not shortcut_check_successful
+        ):  # Loop for quota handling on shortcut check
             try:
                 # Use the base model for this simple check (no tools needed)
                 # Ensure config.default_langchain_model is available and initialized
                 if config.default_langchain_model is None:
-                    raise ValueError("Default language model not initialized in config.")
+                    raise ValueError(
+                        "Default language model not initialized in config."
+                    )
 
                 # Ensure the prompt is not empty before invoking
                 if not shortcut_prompt.strip():
                     print("Shortcut prompt is empty, skipping shortcut check.")
-                    shortcut_text = "NO SHORTCUT" # Treat as no shortcut if prompt is empty
+                    shortcut_text = (
+                        "NO SHORTCUT"  # Treat as no shortcut if prompt is empty
+                    )
                 else:
                     # Create a proper message chain for Gemini
                     messages = [
-                        SystemMessage(content="You are a helpful assistant that analyzes tasks and memories to find shortcuts."),
-                        HumanMessage(content=shortcut_prompt)
+                        SystemMessage(
+                            content="You are a helpful assistant that analyzes tasks and memories to find shortcuts."
+                        ),
+                        HumanMessage(content=shortcut_prompt),
                     ]
-                    shortcut_check_response = config.default_langchain_model.invoke(messages)
+                    shortcut_check_response = config.default_langchain_model.invoke(
+                        messages
+                    )
                     shortcut_text = shortcut_check_response.content.strip()
 
-                shortcut_check_successful = True # Mark as successful if invoke didn't raise or was skipped
+                shortcut_check_successful = (
+                    True  # Mark as successful if invoke didn't raise or was skipped
+                )
 
                 if shortcut_text.startswith("SHORTCUT:"):
                     explanation = shortcut_text.replace("SHORTCUT:", "").strip()
                     print(f"Memory shortcut found: {explanation}")
                     # Prepare AIMessage containing the shortcut explanation
-                    shortcut_response_message = AIMessage(content=explanation, tool_calls=[]) # Ensure no tool calls for shortcut message
+                    shortcut_response_message = AIMessage(
+                        content=explanation, tool_calls=[]
+                    )  # Ensure no tool calls for shortcut message
                     shortcut_found = True
                 elif shortcut_text == "NO SHORTCUT":
                     print("No memory shortcut found.")
                 else:
-                    print(f"Unexpected response from shortcut check: {shortcut_text}. Proceeding with main reasoning.")
+                    print(
+                        f"Unexpected response from shortcut check: {shortcut_text}. Proceeding with main reasoning."
+                    )
 
             except (HTTPError, RequestException) as e:
                 print("\n--------------------------------------------------")
@@ -341,7 +428,9 @@ Respond ONLY with:
                 new_key = input("> ").strip()
                 if not new_key:
                     print("No key entered. Cannot proceed.")
-                    raise ValueError("User did not provide a new API key after quota error.") from e
+                    raise ValueError(
+                        "User did not provide a new API key after quota error."
+                    ) from e
                 print("Attempting to reinitialize model with the new key...")
                 try:
                     config.reinitialize_openrouter_model(new_key)
@@ -350,37 +439,48 @@ Respond ONLY with:
                     print(f"Failed to reinitialize OpenRouter model: {config_e}")
                     raise config_e
             except Exception as e:
-                 logger.error(f"An unexpected error occurred during Hermes shortcut check: {e}", exc_info=True)
-                 print("Error during shortcut check. Proceeding with main reasoning.")
-                 shortcut_check_successful = True # Break loop on unexpected error
+                logger.error(
+                    f"An unexpected error occurred during Hermes shortcut check: {e}",
+                    exc_info=True,
+                )
+                print("Error during shortcut check. Proceeding with main reasoning.")
+                shortcut_check_successful = True  # Break loop on unexpected error
 
     # --- Return Shortcut or Proceed to Main Reasoning ---
     if shortcut_found and shortcut_response_message:
-         # Return the shortcut explanation directly as an AIMessage
-         # Hermes will process this in the next cycle (e.g., call the suggested tool/agent)
-         return {"messages": [shortcut_response_message]}
+        # Return the shortcut explanation directly as an AIMessage
+        # Hermes will process this in the next cycle (e.g., call the suggested tool/agent)
+        return {"messages": [shortcut_response_message]}
 
     # --- Main Reasoning (if no shortcut found) ---
     print("Proceeding with main reasoning...")
     # Prepare messages for LLM, including retrieved context
     messages_for_llm = list(current_messages)
-    if relevant_memories: # Add context if memories were retrieved, even if no shortcut
-        context_header = "Relevant context from past interactions (no direct shortcut found):\n"
+    if relevant_memories:  # Add context if memories were retrieved, even if no shortcut
+        context_header = (
+            "Relevant context from past interactions (no direct shortcut found):\n"
+        )
         formatted_memories = "\n".join([f"- {mem}" for mem in relevant_memories])
         found_system_message = False
         for i, msg in enumerate(messages_for_llm):
             if isinstance(msg, SystemMessage):
-                 original_content = msg.content
-                 # Ensure system_prompt (global) is used if it's the initial message
-                 if i == 0 and msg.content == system_prompt: 
-                     original_content = system_prompt 
-                 # Avoid double-prepending context if reasoning loops
-                 if not original_content.startswith("Relevant context from past interactions"):
-                     messages_for_llm[i] = SystemMessage(content=f"{context_header}{formatted_memories}\n\n---\n\n{original_content}")
-                 found_system_message = True
-                 break
+                original_content = msg.content
+                # Ensure system_prompt (global) is used if it's the initial message
+                if i == 0 and msg.content == system_prompt:
+                    original_content = system_prompt
+                # Avoid double-prepending context if reasoning loops
+                if not original_content.startswith(
+                    "Relevant context from past interactions"
+                ):
+                    messages_for_llm[i] = SystemMessage(
+                        content=f"{context_header}{formatted_memories}\n\n---\n\n{original_content}"
+                    )
+                found_system_message = True
+                break
         if not found_system_message:
-             messages_for_llm.insert(0, SystemMessage(content=f"{context_header}{formatted_memories}"))
+            messages_for_llm.insert(
+                0, SystemMessage(content=f"{context_header}{formatted_memories}")
+            )
 
     # --- Sanitize messages before sending to LLM ---
     sanitized_messages_for_llm = sanitize_messages(messages_for_llm)
@@ -394,52 +494,77 @@ Respond ONLY with:
     while True:
         try:
             if config.default_langchain_model is None:
-                 raise ValueError("Default language model not initialized in config before main reasoning.")
-            
+                raise ValueError(
+                    "Default language model not initialized in config before main reasoning."
+                )
+
             # Ensure messages_for_llm is not empty before invoking
             if not messages_for_llm:
-                logging.error("Hermes main reasoning: messages_for_llm is empty. Cannot invoke LLM.")
+                logging.error(
+                    "Hermes main reasoning: messages_for_llm is empty. Cannot invoke LLM."
+                )
                 # Return a generic error message or handle appropriately
-                return {"messages": [AIMessage(content="Internal error: Cannot proceed with empty message list.")]}
+                return {
+                    "messages": [
+                        AIMessage(
+                            content="Internal error: Cannot proceed with empty message list."
+                        )
+                    ]
+                }
 
             tooled_up_model = config.default_langchain_model.bind_tools(tools)
             # Use the sanitized messages list for the invocation
-            response = tooled_up_model.invoke(sanitized_messages_for_llm) # Get the main response
+            response = tooled_up_model.invoke(
+                sanitized_messages_for_llm
+            )  # Get the main response
 
             # --- Clean the response content before further processing ---
             cleaned_content = response.content
             if isinstance(response.content, list) and len(response.content) > 0:
                 # Assume the first element is the desired text if content is a list
-                cleaned_content = response.content[0] if isinstance(response.content[0], str) else str(response.content[0])
-            
+                cleaned_content = (
+                    response.content[0]
+                    if isinstance(response.content[0], str)
+                    else str(response.content[0])
+                )
+
             # Explicitly remove ```tool_code blocks if they appear in the text content
             if isinstance(cleaned_content, str) and "```tool_code" in cleaned_content:
-                 # Attempt to remove the block - this might be brittle
-                 parts = cleaned_content.split("```tool_code", 1)
-                 cleaned_content = parts[0].strip() # Keep only the part before the block
+                # Attempt to remove the block - this might be brittle
+                parts = cleaned_content.split("```tool_code", 1)
+                cleaned_content = parts[
+                    0
+                ].strip()  # Keep only the part before the block
 
             # Create a new AIMessage with cleaned content but original tool_calls
             # Ensure all relevant attributes are copied
             cleaned_response = AIMessage(
-                content=cleaned_content, 
+                content=cleaned_content,
                 tool_calls=response.tool_calls,
-                id=getattr(response, 'id', None),
-                additional_kwargs=getattr(response, 'additional_kwargs', {}),
-                response_metadata=getattr(response, 'response_metadata', {}),
-                name=getattr(response, 'name', None),
-                tool_call_chunks=getattr(response, 'tool_call_chunks', None) # Preserve if exists
+                id=getattr(response, "id", None),
+                additional_kwargs=getattr(response, "additional_kwargs", {}),
+                response_metadata=getattr(response, "response_metadata", {}),
+                name=getattr(response, "name", None),
+                tool_call_chunks=getattr(
+                    response, "tool_call_chunks", None
+                ),  # Preserve if exists
             )
             # --- End Cleaning ---
-
 
             # --- Plan Compression & Memory Storage (using cleaned_content) ---
             compressed_summary = None
             # Use cleaned_content for plan detection/compression
-            if cleaned_content and isinstance(cleaned_content, str) and "**Plan:**" in cleaned_content:
+            if (
+                cleaned_content
+                and isinstance(cleaned_content, str)
+                and "**Plan:**" in cleaned_content
+            ):
                 print("Plan detected in response. Attempting compression...")
                 try:
                     # Extract the detailed plan text from cleaned_content
-                    detailed_plan_text = cleaned_content.split("**Plan:**", 1)[1].strip()
+                    detailed_plan_text = cleaned_content.split("**Plan:**", 1)[
+                        1
+                    ].strip()
 
                     # Check if the extracted plan text is actually present
                     if detailed_plan_text:
@@ -455,41 +580,76 @@ Compressed Summary:"""
                         compression_successful = False
                         while not compression_successful:
                             # CORRECTED INDENTATION BLOCK START
-                            try: # Line ~356
+                            try:  # Line ~356
                                 if config.default_langchain_model is None:
-                                    raise ValueError("Default language model not initialized before compression.")
-                                
+                                    raise ValueError(
+                                        "Default language model not initialized before compression."
+                                    )
+
                                 # Ensure compression_prompt is not empty
                                 if not compression_prompt.strip():
-                                    print("Compression prompt is empty, skipping compression.")
-                                    compressed_summary = None # Ensure summary is None if skipped
-                                    compression_successful = True # Mark as 'successful' to exit loop
+                                    print(
+                                        "Compression prompt is empty, skipping compression."
+                                    )
+                                    compressed_summary = (
+                                        None  # Ensure summary is None if skipped
+                                    )
+                                    compression_successful = (
+                                        True  # Mark as 'successful' to exit loop
+                                    )
                                 else:
                                     # Use HumanMessage instead of SystemMessage for the compression prompt
-                                    compression_response = config.default_langchain_model.invoke([HumanMessage(content=compression_prompt)])
-                                    compressed_summary = compression_response.content.strip()
-                                    compression_successful = True # Mark success
-                                    print(f"Plan compressed successfully: {compressed_summary}")
+                                    compression_response = (
+                                        config.default_langchain_model.invoke(
+                                            [HumanMessage(content=compression_prompt)]
+                                        )
+                                    )
+                                    compressed_summary = (
+                                        compression_response.content.strip()
+                                    )
+                                    compression_successful = True  # Mark success
+                                    print(
+                                        f"Plan compressed successfully: {compressed_summary}"
+                                    )
 
                             except (HTTPError, RequestException) as comp_e:
-                                print("\n--------------------------------------------------") 
-                                print(f"OpenRouter API Error during plan compression for Hermes: {comp_e}")
-                                print("Please enter a new OpenRouter API Key to continue:")
+                                print(
+                                    "\n--------------------------------------------------"
+                                )
+                                print(
+                                    f"OpenRouter API Error during plan compression for Hermes: {comp_e}"
+                                )
+                                print(
+                                    "Please enter a new OpenRouter API Key to continue:"
+                                )
                                 new_key_comp = input("> ").strip()
                                 if not new_key_comp:
                                     print("No key entered. Cannot compress plan.")
-                                    break # Exit compression loop if no key provided
-                                print("Attempting to reinitialize model with the new key...")
+                                    break  # Exit compression loop if no key provided
+                                print(
+                                    "Attempting to reinitialize model with the new key..."
+                                )
                                 try:
                                     config.reinitialize_openrouter_model(new_key_comp)
-                                    print("Model reinitialized. Retrying compression call...")
+                                    print(
+                                        "Model reinitialized. Retrying compression call..."
+                                    )
                                 except Exception as config_comp_e:
-                                        print(f"Failed to reinitialize OpenRouter model during compression: {config_comp_e}")
-                                        break # Exit compression loop if re-init fails
-                            except Exception as comp_e_other: 
-                                logger.error(f"An unexpected error occurred during Hermes plan compression: {comp_e_other}", exc_info=True)
-                                print("Error during plan compression. Skipping summary storage.")
-                                compression_successful = True # Break loop on unexpected error
+                                    print(
+                                        f"Failed to reinitialize OpenRouter model during compression: {config_comp_e}"
+                                    )
+                                    break  # Exit compression loop if re-init fails
+                            except Exception as comp_e_other:
+                                logger.error(
+                                    f"An unexpected error occurred during Hermes plan compression: {comp_e_other}",
+                                    exc_info=True,
+                                )
+                                print(
+                                    "Error during plan compression. Skipping summary storage."
+                                )
+                                compression_successful = (
+                                    True  # Break loop on unexpected error
+                                )
                             # CORRECTED INDENTATION BLOCK END
 
                         # Store compressed summary if successful
@@ -498,28 +658,39 @@ Compressed Summary:"""
                                 key=f"plan_summary_{datetime.datetime.now().timestamp()}",  # Generate unique key
                                 value=compressed_summary,
                                 memory_type="plan_summary",
-                                agent_name="hermes"
+                                agent_name="hermes",
                             )
                         else:
                             # If detailed_plan_text was empty, skip compression
-                            print("Skipping plan compression as extracted plan text was empty.")
+                            print(
+                                "Skipping plan compression as extracted plan text was empty."
+                            )
 
                 # Unindent this except block to align with the outer try (around line 348)
                 except Exception as outer_comp_e:
-                     # Catch errors in extracting plan or setting up compression
-                     logger.error(f"Error setting up plan compression: {outer_comp_e}", exc_info=True)
-                     print("Error during plan compression setup. Skipping summary storage.")
+                    # Catch errors in extracting plan or setting up compression
+                    logger.error(
+                        f"Error setting up plan compression: {outer_comp_e}",
+                        exc_info=True,
+                    )
+                    print(
+                        "Error during plan compression setup. Skipping summary storage."
+                    )
 
             # Add general reasoning output to memory (using cleaned_content)
             # Avoid storing the full plan again if we stored the summary
-            if cleaned_content and not cleaned_response.tool_calls and not compressed_summary:
-                 # Store if it's content AND not a tool call AND we didn't store a summary
-                 memory_manager_instance.add_memory(
-                     key=f"reasoning_{datetime.datetime.now().timestamp()}",  # Generate unique key
-                     value=cleaned_content,
-                     memory_type="reasoning_output",
-                     agent_name="hermes"
-                 )
+            if (
+                cleaned_content
+                and not cleaned_response.tool_calls
+                and not compressed_summary
+            ):
+                # Store if it's content AND not a tool call AND we didn't store a summary
+                memory_manager_instance.add_memory(
+                    key=f"reasoning_{datetime.datetime.now().timestamp()}",  # Generate unique key
+                    value=cleaned_content,
+                    memory_type="reasoning_output",
+                    agent_name="hermes",
+                )
 
             # --- End Plan Compression & Memory Storage ---
 
@@ -533,17 +704,22 @@ Compressed Summary:"""
             new_key = input("> ").strip()
             if not new_key:
                 print("No key entered. Cannot proceed.")
-                raise ValueError("User did not provide a new API key after quota error.") from e
+                raise ValueError(
+                    "User did not provide a new API key after quota error."
+                ) from e
             print("Attempting to reinitialize model with the new key...")
             try:
-                 config.reinitialize_openrouter_model(new_key)
-                 print("Model reinitialized. Retrying API call...")
+                config.reinitialize_openrouter_model(new_key)
+                print("Model reinitialized. Retrying API call...")
             except Exception as config_e:
-                 print(f"Failed to reinitialize OpenRouter model: {config_e}")
-                 raise config_e
+                print(f"Failed to reinitialize OpenRouter model: {config_e}")
+                raise config_e
 
         except Exception as e:
-            logging.error(f"An unexpected error occurred during Hermes main model invocation: {e}", exc_info=True)
+            logging.error(
+                f"An unexpected error occurred during Hermes main model invocation: {e}",
+                exc_info=True,
+            )
             raise e
 
 
@@ -568,14 +744,16 @@ def check_for_tool_calls(
     if isinstance(last_message, AIMessage):
         try:
             # Only attempt startswith if content is a string
-            if isinstance(last_message.content, str) and last_message.content.startswith("Stopping task execution early:"):
+            if isinstance(
+                last_message.content, str
+            ) and last_message.content.startswith("Stopping task execution early:"):
                 is_stopping_message = True
         except AttributeError:
             # If content is not a string or lacks startswith (e.g., list), it's not the stopping message.
-            pass # is_stopping_message remains False
+            pass  # is_stopping_message remains False
 
     if is_stopping_message:
-        return "feedback_and_wait_on_human_input" # Go back to user
+        return "feedback_and_wait_on_human_input"  # Go back to user
 
     # Original tool call check
     if last_message.tool_calls:
@@ -589,9 +767,10 @@ def check_for_tool_calls(
     else:
         return "feedback_and_wait_on_human_input"
 
+
 acting = ToolNode(tools)
 
-workflow = StateGraph(HermesState) # Use the custom state
+workflow = StateGraph(HermesState)  # Use the custom state
 workflow.add_node("feedback_and_wait_on_human_input", feedback_and_wait_on_human_input)
 workflow.add_node("reasoning", reasoning)
 workflow.add_node("tools", acting)
@@ -605,6 +784,7 @@ workflow.add_conditional_edges(
     check_for_tool_calls,
 )
 # workflow.add_edge("tools", 'reasoning') # Replace simple edge with conditional
+
 
 # Condition to check the outcome of the tool call node
 def check_tool_outcome(state: HermesState) -> Literal["reasoning"]:
@@ -620,17 +800,21 @@ def check_tool_outcome(state: HermesState) -> Literal["reasoning"]:
     """
     # The ToolNode adds ToolMessages to the state. The most recent one contains the output.
     last_message = state["messages"][-1]
-    current_step_count = state.get('plan_step_count', 0) # Get current count
-    
+    current_step_count = state.get("plan_step_count", 0)  # Get current count
+
     # We only care about structured feedback from assign_agent_to_task for now.
     # Other tools might return strings or raise exceptions (handled by ToolNode).
     # ToolNode wraps results in ToolMessage(content=...)
     # Our structured dict is the content of the ToolMessage.
-    if isinstance(last_message, ToolMessage) and isinstance(last_message.content, dict) and "status" in last_message.content:
+    if (
+        isinstance(last_message, ToolMessage)
+        and isinstance(last_message.content, dict)
+        and "status" in last_message.content
+    ):
         tool_status = last_message.content.get("status")
         tool_message = last_message.content.get("message", "")
-        tool_result = last_message.content.get("result") # Get result if available
-        
+        tool_result = last_message.content.get("result")  # Get result if available
+
         # Attempt to find the original task assignment in previous messages
         original_task_info = "Unknown task"
         assigned_agent_name = "Unknown agent"
@@ -640,58 +824,68 @@ def check_tool_outcome(state: HermesState) -> Literal["reasoning"]:
             if isinstance(prev_msg, AIMessage) and prev_msg.tool_calls:
                 # Find the specific assign_agent_to_task call
                 for tool_call in prev_msg.tool_calls:
-                     # Heuristic: Assume the first assign_agent_to_task call before the ToolMessage is the one.
-                     # This might need refinement if multiple tool calls happen between reasoning steps.
-                    if tool_call.get("name") == "assign_agent_to_task": 
-                        assigned_agent_name = tool_call.get("args", {}).get("agent_name", "Unknown agent")
-                        original_task_info = tool_call.get("args", {}).get("task", "Unknown task")
-                        break # Found the relevant tool call
-                break # Stop searching backwards
+                    # Heuristic: Assume the first assign_agent_to_task call before the ToolMessage is the one.
+                    # This might need refinement if multiple tool calls happen between reasoning steps.
+                    if tool_call.get("name") == "assign_agent_to_task":
+                        assigned_agent_name = tool_call.get("args", {}).get(
+                            "agent_name", "Unknown agent"
+                        )
+                        original_task_info = tool_call.get("args", {}).get(
+                            "task", "Unknown task"
+                        )
+                        break  # Found the relevant tool call
+                break  # Stop searching backwards
 
-        if tool_status == 'failure':
+        if tool_status == "failure":
             print(f"Hermes observed tool failure: {tool_message}")
             # Optionally add failure info to memory?
             # memory_manager.add_memory(text=f"Failure executing {assigned_agent_name} on task '{original_task_info}': {tool_message}", memory_type="error", agent_name=assigned_agent_name, task_info=original_task_info)
             # Don't increment step count on failure
-            return "reasoning" # Just return node name, no state update needed here
-        elif tool_status == 'success':
+            return "reasoning"  # Just return node name, no state update needed here
+        elif tool_status == "success":
             # --- Increment Step Count on Successful Agent Assignment ---
             # Check if the successful tool was assign_agent_to_task and if it was a creator agent
             tool_was_assignment = False
-            assigned_agent_was_creator = False # Flag for creation agents
+            assigned_agent_was_creator = False  # Flag for creation agents
             creator_agent_name = None
             for i in range(len(state["messages"]) - 2, -1, -1):
-                 prev_msg = state["messages"][i]
-                 if isinstance(prev_msg, AIMessage) and prev_msg.tool_calls:
-                     for tool_call in prev_msg.tool_calls:
-                         if tool_call.get("name") == "assign_agent_to_task":
-                             tool_was_assignment = True
-                             # Check if the assigned agent was a creator
-                             creator_agent_name = tool_call.get("args", {}).get("agent_name")
-                             if creator_agent_name in ['agent_smith', 'tool_maker']:
-                                 assigned_agent_was_creator = True
-                             # No need to break inner loop here if we want to capture the creator name
-                     # Break outer loop once we find the AIMessage that likely triggered the tool
-                     break 
+                prev_msg = state["messages"][i]
+                if isinstance(prev_msg, AIMessage) and prev_msg.tool_calls:
+                    for tool_call in prev_msg.tool_calls:
+                        if tool_call.get("name") == "assign_agent_to_task":
+                            tool_was_assignment = True
+                            # Check if the assigned agent was a creator
+                            creator_agent_name = tool_call.get("args", {}).get(
+                                "agent_name"
+                            )
+                            if creator_agent_name in ["agent_smith", "tool_maker"]:
+                                assigned_agent_was_creator = True
+                            # No need to break inner loop here if we want to capture the creator name
+                    # Break outer loop once we find the AIMessage that likely triggered the tool
+                    break
 
             # --- Log successful creation and registration ---
             if assigned_agent_was_creator:
-                created_entity_type = "Agent" if creator_agent_name == 'agent_smith' else "Tool"
+                created_entity_type = (
+                    "Agent" if creator_agent_name == "agent_smith" else "Tool"
+                )
                 # Use tool_result which contains the name returned by the creator agent
-                created_entity_name = tool_result if tool_result else "[Unknown Name]" 
-                logger.info(f"Hermes confirmed: {creator_agent_name} successfully created and registered {created_entity_type} '{created_entity_name}'.")
+                created_entity_name = tool_result if tool_result else "[Unknown Name]"
+                logger.info(
+                    f"Hermes confirmed: {creator_agent_name} successfully created and registered {created_entity_type} '{created_entity_name}'."
+                )
             # --- End Creation Log ---
 
             # --- Log successful assignment for training data ---
-            log_file = 'agent_assignment_log.csv'
-            log_entry = {'task': original_task_info, 'agent': assigned_agent_name}
+            log_file = "agent_assignment_log.csv"
+            log_entry = {"task": original_task_info, "agent": assigned_agent_name}
             file_exists = os.path.isfile(log_file)
             try:
-                with open(log_file, 'a', newline='', encoding='utf-8') as csvfile:
-                    fieldnames = ['task', 'agent']
+                with open(log_file, "a", newline="", encoding="utf-8") as csvfile:
+                    fieldnames = ["task", "agent"]
                     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
                     if not file_exists:
-                        writer.writeheader() # Write header only if file is new
+                        writer.writeheader()  # Write header only if file is new
                     writer.writerow(log_entry)
                 logging.info(f"Logged successful assignment to {log_file}: {log_entry}")
             except Exception as log_e:
@@ -705,33 +899,36 @@ def check_tool_outcome(state: HermesState) -> Literal["reasoning"]:
                 value=success_summary,
                 memory_type="solution",
                 agent_name=assigned_agent_name,
-                task_info=original_task_info
+                task_info=original_task_info,
             )
-            
+
             # Increment step count if it was an assignment
             if tool_was_assignment:
-                 print(f"(Plan step {current_step_count + 1} completed)")
-                 # Return state update dictionary ONLY if incrementing
-                 return {"plan_step_count": current_step_count + 1} 
+                print(f"(Plan step {current_step_count + 1} completed)")
+                # Return state update dictionary ONLY if incrementing
+                return {"plan_step_count": current_step_count + 1}
             else:
-                 # If we logged success but didn't increment step count (because it wasn't an assignment tool)
-                 # just return the node name.
-                 return "reasoning"
+                # If we logged success but didn't increment step count (because it wasn't an assignment tool)
+                # just return the node name.
+                return "reasoning"
             # --- End Increment Step Count ---
 
-        else: # Unknown status
-            return "reasoning" # No state update
+        else:  # Unknown status
+            return "reasoning"  # No state update
     else:
-         # If it wasn't a structured dict (e.g., output from list_available_agents), proceed normally
-         return "reasoning" # No state update
+        # If it wasn't a structured dict (e.g., output from list_available_agents), proceed normally
+        return "reasoning"  # No state update
+
 
 # Add conditional edge from tools node - now check_tool_outcome can return a dict or a string
 workflow.add_conditional_edges(
     "tools",
     # Pass the function directly. LangGraph handles dict return for state update
     # and string return for routing based on the mapping.
-    check_tool_outcome, 
-    {"reasoning": "reasoning"} # Route to reasoning if the function returns the string "reasoning"
+    check_tool_outcome,
+    {
+        "reasoning": "reasoning"
+    },  # Route to reasoning if the function returns the string "reasoning"
 )
 
 
@@ -750,7 +947,7 @@ def sanitize_messages(messages: Sequence[BaseMessage]) -> Sequence[BaseMessage]:
         A new list of messages with unsupported parts filtered out.
     """
     sanitized_messages = []
-    supported_types = {"text", "image_url", "media"} # Define supported types
+    supported_types = {"text", "image_url", "media"}  # Define supported types
 
     for msg in messages:
         if isinstance(msg.content, str):
@@ -762,7 +959,7 @@ def sanitize_messages(messages: Sequence[BaseMessage]) -> Sequence[BaseMessage]:
             for part in msg.content:
                 if isinstance(part, dict) and part.get("type") in supported_types:
                     filtered_content.append(part)
-                elif isinstance(part, str): # Sometimes parts can be just strings
+                elif isinstance(part, str):  # Sometimes parts can be just strings
                     filtered_content.append({"type": "text", "text": part})
 
             # Only add message back if it still has content after filtering
@@ -773,43 +970,58 @@ def sanitize_messages(messages: Sequence[BaseMessage]) -> Sequence[BaseMessage]:
                     new_msg = HumanMessage(content=filtered_content)
                 elif isinstance(msg, AIMessage):
                     # Preserve tool_calls if they exist
-                    new_msg = AIMessage(content=filtered_content, tool_calls=getattr(msg, 'tool_calls', []))
-                elif isinstance(msg, AIMessageChunk): # Handle potential chunks if streaming
-                     new_msg = AIMessageChunk(content=filtered_content, tool_calls=getattr(msg, 'tool_calls', []))
+                    new_msg = AIMessage(
+                        content=filtered_content,
+                        tool_calls=getattr(msg, "tool_calls", []),
+                    )
+                elif isinstance(
+                    msg, AIMessageChunk
+                ):  # Handle potential chunks if streaming
+                    new_msg = AIMessageChunk(
+                        content=filtered_content,
+                        tool_calls=getattr(msg, "tool_calls", []),
+                    )
                 # Add other message types here if necessary (e.g., SystemMessage, ToolMessage usually have string content)
                 else:
                     # Fallback: Keep original if type handling not specified, or skip if unsafe
                     # For safety, let's skip if we don't know how to reconstruct
-                    logger.warning(f"Skipping message of type {type(msg)} during sanitization due to list content.")
-                    continue # Skip adding this message
+                    logger.warning(
+                        f"Skipping message of type {type(msg)} during sanitization due to list content."
+                    )
+                    continue  # Skip adding this message
 
                 # Copy metadata if present
-                if hasattr(msg, 'additional_kwargs'):
+                if hasattr(msg, "additional_kwargs"):
                     new_msg.additional_kwargs = msg.additional_kwargs
-                if hasattr(msg, 'response_metadata'):
+                if hasattr(msg, "response_metadata"):
                     new_msg.response_metadata = msg.response_metadata
-                if hasattr(msg, 'id'):
+                if hasattr(msg, "id"):
                     new_msg.id = msg.id
-                if hasattr(msg, 'name'):
+                if hasattr(msg, "name"):
                     new_msg.name = msg.name
 
                 sanitized_messages.append(new_msg)
             else:
-                 logger.warning(f"Message content became empty after filtering unsupported parts: {msg}")
+                logger.warning(
+                    f"Message content became empty after filtering unsupported parts: {msg}"
+                )
         else:
             # Keep message if content type is neither string nor list (shouldn't happen often)
             sanitized_messages.append(msg)
 
     return sanitized_messages
+
+
 # --- End Message Sanitization Helper ---
 
 
 # Helper to get current state values safely
 def get_state_values(state: HermesState) -> tuple:
-    messages = state.get('messages', [])
-    plan_step_count = state.get('plan_step_count', 0)
-    initial_goal = state.get('initial_goal', None)
+    messages = state.get("messages", [])
+    plan_step_count = state.get("plan_step_count", 0)
+    initial_goal = state.get("initial_goal", None)
     return messages, plan_step_count, initial_goal
+
 
 # Ensure this function definition starts at the top level (no indent)
 def hermes(uuid: str):
@@ -829,15 +1041,9 @@ def hermes(uuid: str):
     initial_state = {
         "messages": [SystemMessage(content=system_prompt)],
         "plan_step_count": 0,
-        "initial_goal": None
+        "initial_goal": None,
     }
     # Ensure this return is correctly indented within the function
     # Increase recursion limit to handle potentially longer plans
-    config_with_limit = {
-        "configurable": {"thread_id": uuid},
-        "recursion_limit": 66 
-    }
-    return graph.invoke(
-        initial_state,
-        config=config_with_limit
-    )
+    config_with_limit = {"configurable": {"thread_id": uuid}, "recursion_limit": 66}
+    return graph.invoke(initial_state, config=config_with_limit)

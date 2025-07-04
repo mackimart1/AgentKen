@@ -5,11 +5,13 @@ Responsible for creating new LangChain tools based on task requirements.
 It writes the tool code and tests, formats/lints the code, runs the tests,
 and reports the outcome back to Hermes. Uses LangGraph for its internal workflow.
 """
+
 from typing import Literal, Optional, Dict, Any
 
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, ToolMessage
 from langgraph.graph import END, StateGraph, MessagesState
 from langgraph.prebuilt import ToolNode
+
 # OpenRouter uses standard HTTP errors, not Google-specific exceptions
 from requests.exceptions import HTTPError, RequestException
 import logging
@@ -19,14 +21,17 @@ import time
 import re
 
 # --- Explicitly add project root to sys.path ---
-_project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+_project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if _project_root not in sys.path:
     sys.path.insert(0, _project_root)
 
 # Import modules with error handling
 try:
     import memory_manager
-    MEMORY_AVAILABLE = hasattr(memory_manager, 'retrieve_memories') or hasattr(memory_manager, 'search_memories')
+
+    MEMORY_AVAILABLE = hasattr(memory_manager, "retrieve_memories") or hasattr(
+        memory_manager, "search_memories"
+    )
 except ImportError:
     print("Warning: memory_manager not available")
     memory_manager = None
@@ -136,65 +141,69 @@ tools = utils.all_tool_functions()
 def get_memory_context(task_description: str) -> tuple[str, str]:
     """
     Retrieve relevant memories and templates for the task.
-    
+
     Args:
         task_description (str): Description of the tool to create.
-        
+
     Returns:
         tuple[str, str]: (memory_context, template_context)
     """
     memory_context = ""
     template_context = ""
-    
+
     if not MEMORY_AVAILABLE or not memory_manager:
         return memory_context, template_context
-    
+
     try:
         # Try different memory retrieval methods
         relevant_memories = []
-        
-        if hasattr(memory_manager, 'retrieve_memories'):
-            relevant_memories = memory_manager.retrieve_memories(query_text=task_description, k=5)
-        elif hasattr(memory_manager, 'search_memories'):
-            relevant_memories = memory_manager.search_memories(query=task_description, limit=5)
-        
+
+        if hasattr(memory_manager, "retrieve_memories"):
+            relevant_memories = memory_manager.retrieve_memories(
+                query_text=task_description, k=5
+            )
+        elif hasattr(memory_manager, "search_memories"):
+            relevant_memories = memory_manager.search_memories(
+                query=task_description, limit=5
+            )
+
         if relevant_memories:
             memory_context = "Relevant context from past interactions:\n"
             memory_context += "\n".join([f"- {mem}" for mem in relevant_memories])
             memory_context += "\n\n---\n\n"
-        
+
         # Try to get tool templates
         tool_templates = []
-        if hasattr(memory_manager, 'retrieve_memories'):
+        if hasattr(memory_manager, "retrieve_memories"):
             tool_templates = memory_manager.retrieve_memories(
-                query_text=task_description, 
+                query_text=task_description,
                 k=1,
-                filter_metadata={"memory_type": "tool_template"}
+                filter_metadata={"memory_type": "tool_template"},
             )
-        
+
         if tool_templates:
             template_context = f"Relevant template found (use as starting point):\n```python\n{tool_templates[0]}\n```\n\n---\n\n"
-            
+
     except Exception as e:
         logger.warning(f"Failed to retrieve memories: {e}")
-    
+
     return memory_context, template_context
 
 
 def check_shortcut_solution(task_description: str, memories: list) -> Optional[str]:
     """
     Check if there's a shortcut solution in the memories.
-    
+
     Args:
         task_description (str): The task description.
         memories (list): List of relevant memories.
-        
+
     Returns:
         Optional[str]: Shortcut explanation if found, None otherwise.
     """
     if not memories or config.default_langchain_model is None:
         return None
-    
+
     try:
         formatted_memories = "\n".join([f"- {mem}" for mem in memories])
         shortcut_prompt = f"""Analyze the following tool creation task and retrieved memories.
@@ -210,15 +219,17 @@ Respond ONLY with:
 - "SHORTCUT: [Explanation]" if a clear shortcut exists
 - "NO SHORTCUT" if no clear shortcut is found"""
 
-        response = config.default_langchain_model.invoke([SystemMessage(content=shortcut_prompt)])
+        response = config.default_langchain_model.invoke(
+            [SystemMessage(content=shortcut_prompt)]
+        )
         shortcut_text = response.content.strip()
-        
+
         if shortcut_text.startswith("SHORTCUT:"):
             return shortcut_text.replace("SHORTCUT:", "").strip()
-            
+
     except Exception as e:
         logger.warning(f"Failed to check for shortcuts: {e}")
-    
+
     return None
 
 
@@ -233,12 +244,12 @@ def reasoning(state: MessagesState) -> dict:
         dict: Update for the graph state with the LLM's response (AIMessage).
     """
     print("\ntool_maker is thinking...")
-    current_messages = state['messages']
+    current_messages = state["messages"]
 
     # Extract current task/query
     task_description = "Create a tool based on request"
     query_context = "Initial tool creation request"
-    
+
     if current_messages:
         for msg in reversed(current_messages):
             if isinstance(msg, HumanMessage):
@@ -250,7 +261,7 @@ def reasoning(state: MessagesState) -> dict:
 
     # Get memory context
     memory_context, template_context = get_memory_context(task_description)
-    
+
     # Check for shortcuts
     if memory_context:
         memories_list = memory_context.split("- ")[1:] if "- " in memory_context else []
@@ -261,43 +272,50 @@ def reasoning(state: MessagesState) -> dict:
 
     # Prepare messages for LLM
     messages_for_llm = list(current_messages)
-    
+
     # Add context to system message
     combined_context = template_context + memory_context
     if combined_context and messages_for_llm:
         if isinstance(messages_for_llm[0], SystemMessage):
             original_content = messages_for_llm[0].content
-            if not any(marker in original_content for marker in ["Relevant template found", "Relevant context from past"]):
-                messages_for_llm[0] = SystemMessage(content=f"{combined_context}{original_content}")
+            if not any(
+                marker in original_content
+                for marker in ["Relevant template found", "Relevant context from past"]
+            ):
+                messages_for_llm[0] = SystemMessage(
+                    content=f"{combined_context}{original_content}"
+                )
         else:
             messages_for_llm.insert(0, SystemMessage(content=combined_context.strip()))
 
     # Main LLM call with retry logic
     max_retries = 3
     retry_delay = 5
-    
+
     for attempt in range(max_retries):
         try:
             if config.default_langchain_model is None:
                 raise ValueError("Default language model not initialized")
-            
+
             if not messages_for_llm:
                 raise ValueError("No messages to process")
-                
+
             tooled_up_model = config.default_langchain_model.bind_tools(tools)
             response = tooled_up_model.invoke(messages_for_llm)
             return {"messages": [response]}
 
         except (HTTPError, RequestException) as e:
             if attempt < max_retries - 1:
-                logger.warning(f"OpenRouter API Error. Retry {attempt + 1}/{max_retries}")
+                logger.warning(
+                    f"OpenRouter API Error. Retry {attempt + 1}/{max_retries}"
+                )
                 print(f"API error. Retrying in {retry_delay} seconds...")
                 time.sleep(retry_delay)
                 continue
             else:
                 logger.error("Max retries reached for API Error")
                 raise e
-                
+
         except (HTTPError, RequestException) as e:
             print(f"\nOpenRouter API Error: {e}")
             print("Please enter a new OpenRouter API Key to continue:")
@@ -312,7 +330,9 @@ def reasoning(state: MessagesState) -> dict:
                 raise config_e
 
         except Exception as e:
-            logger.error(f"Unexpected error in Tool Maker reasoning: {e}", exc_info=True)
+            logger.error(
+                f"Unexpected error in Tool Maker reasoning: {e}", exc_info=True
+            )
             raise e
 
 
@@ -329,12 +349,12 @@ def check_for_tool_calls(state: MessagesState) -> Literal["tools", END]:
     messages = state["messages"]
     if not messages:
         return END
-        
+
     last_message = messages[-1]
-    
-    if hasattr(last_message, 'tool_calls') and last_message.tool_calls:
+
+    if hasattr(last_message, "tool_calls") and last_message.tool_calls:
         # Print thoughts if available
-        if hasattr(last_message, 'content') and last_message.content:
+        if hasattr(last_message, "content") and last_message.content:
             content = last_message.content
             if isinstance(content, str) and content.strip():
                 print("tool_maker thought:")
@@ -344,92 +364,109 @@ def check_for_tool_calls(state: MessagesState) -> Literal["tools", END]:
                     print("tool_maker thought:")
                     print(content[0])
 
-        print(f"\ntool_maker is using tools: {[tc.get('name', 'unknown') for tc in last_message.tool_calls]}")
+        print(
+            f"\ntool_maker is using tools: {[tc.get('name', 'unknown') for tc in last_message.tool_calls]}"
+        )
         return "tools"
-    
+
     return END
 
 
-def analyze_tool_creation_result(messages_history: list) -> tuple[str, Optional[str], str]:
+def analyze_tool_creation_result(
+    messages_history: list,
+) -> tuple[str, Optional[str], str]:
     """
     Analyze the message history to determine if tool creation was successful.
-    
+
     Args:
         messages_history (list): List of messages from the workflow.
-        
+
     Returns:
         tuple[str, Optional[str], str]: (status, tool_name, final_message)
     """
-    status = 'failure'
+    status = "failure"
     tool_name = None
     final_message = "Tool creation failed - unknown error"
-    
+
     if not messages_history:
         return status, tool_name, "No messages in history"
-    
+
     # Get the final message
     last_message = messages_history[-1]
-    if hasattr(last_message, 'content'):
+    if hasattr(last_message, "content"):
         final_message = str(last_message.content)
-    
+
     # Look for success indicators in the final message
     success_patterns = [
         r"successfully created.*?tool.*?['\"]([^'\"]+)['\"]",
         r"tool.*?['\"]([^'\"]+)['\"].*?successfully",
-        r"created and tested.*?['\"]([^'\"]+)['\"]"
+        r"created and tested.*?['\"]([^'\"]+)['\"]",
     ]
-    
+
     for pattern in success_patterns:
         match = re.search(pattern, final_message.lower())
         if match:
             potential_tool_name = match.group(1)
             if potential_tool_name:
-                status = 'success'
+                status = "success"
                 tool_name = potential_tool_name
                 break
-    
+
     # Check for explicit failure indicators
-    failure_indicators = ['failed', 'error', 'exception', 'cannot', 'unable']
+    failure_indicators = ["failed", "error", "exception", "cannot", "unable"]
     if any(indicator in final_message.lower() for indicator in failure_indicators):
-        status = 'failure'
+        status = "failure"
         tool_name = None
-    
+
     # Analyze command outputs for failures
     critical_failure = False
     for i, msg in enumerate(messages_history):
-        if isinstance(msg, AIMessage) and hasattr(msg, 'tool_calls') and msg.tool_calls:
+        if isinstance(msg, AIMessage) and hasattr(msg, "tool_calls") and msg.tool_calls:
             for tool_call in msg.tool_calls:
                 if tool_call.get("name") == "run_shell_command":
                     command = tool_call.get("args", {}).get("command", "")
-                    
+
                     # Check next message for tool output
                     if i + 1 < len(messages_history):
                         next_msg = messages_history[i + 1]
                         if isinstance(next_msg, ToolMessage):
                             output = str(next_msg.content).lower()
-                            
+
                             # Check for linting failures
-                            if "ruff check" in command and ("error:" in output or "failed" in output):
+                            if "ruff check" in command and (
+                                "error:" in output or "failed" in output
+                            ):
                                 if "fixed" not in output:
                                     critical_failure = True
                                     break
-                            
+
                             # Check for test failures
                             if "unittest" in command:
-                                if any(fail_indicator in output for fail_indicator in 
-                                      ["fail:", "error:", "failures=", "errors="]):
-                                    if not ("failures=0" in output and "errors=0" in output):
+                                if any(
+                                    fail_indicator in output
+                                    for fail_indicator in [
+                                        "fail:",
+                                        "error:",
+                                        "failures=",
+                                        "errors=",
+                                    ]
+                                ):
+                                    if not (
+                                        "failures=0" in output and "errors=0" in output
+                                    ):
                                         critical_failure = True
                                         break
-            
+
             if critical_failure:
                 break
-    
+
     if critical_failure:
-        status = 'failure'
+        status = "failure"
         tool_name = None
-        final_message = f"Tool creation failed due to linting or testing errors. {final_message}"
-    
+        final_message = (
+            f"Tool creation failed due to linting or testing errors. {final_message}"
+        )
+
     return status, tool_name, final_message
 
 
@@ -441,7 +478,7 @@ workflow.add_node("reasoning", reasoning)
 workflow.add_node("tools", acting)
 workflow.set_entry_point("reasoning")
 workflow.add_conditional_edges("reasoning", check_for_tool_calls)
-workflow.add_edge("tools", 'reasoning')
+workflow.add_edge("tools", "reasoning")
 graph = workflow.compile()
 
 
@@ -459,60 +496,58 @@ def tool_maker(task: str) -> Dict[str, Any]:
             - 'message' (str): The final message from the workflow
     """
     logger.info(f"Tool Maker invoked for task: {task[:100]}...")
-    
+
     try:
         # Execute the workflow
-        final_state = graph.invoke({
-            "messages": [
-                SystemMessage(content=system_prompt), 
-                HumanMessage(content=task)
-            ]
-        })
-        
+        final_state = graph.invoke(
+            {
+                "messages": [
+                    SystemMessage(content=system_prompt),
+                    HumanMessage(content=task),
+                ]
+            }
+        )
+
         logger.info("Tool Maker graph invocation completed")
-        
+
         # Extract messages history
-        messages_history = final_state.get('messages', []) if final_state else []
-        
+        messages_history = final_state.get("messages", []) if final_state else []
+
         # Analyze the result
-        status, tool_name, final_message = analyze_tool_creation_result(messages_history)
-        
+        status, tool_name, final_message = analyze_tool_creation_result(
+            messages_history
+        )
+
         # Update manifest on success
-        if status == 'success' and tool_name:
-            module_path = os.path.join('tools', f"{tool_name}.py")
+        if status == "success" and tool_name:
+            module_path = os.path.join("tools", f"{tool_name}.py")
             manifest_entry = {
                 "name": tool_name,
                 "module_path": module_path,
                 "function_name": tool_name,
-                "description": f"Tool '{tool_name}' created for: {task[:100]}..."
+                "description": f"Tool '{tool_name}' created for: {task[:100]}...",
             }
-            
-            if utils.add_manifest_entry(manifest_type='tool', entry=manifest_entry):
+
+            if utils.add_manifest_entry(manifest_type="tool", entry=manifest_entry):
                 logger.info(f"Successfully registered tool: {tool_name}")
-                final_message = f"Successfully created, tested, and registered tool: '{tool_name}'"
+                final_message = (
+                    f"Successfully created, tested, and registered tool: '{tool_name}'"
+                )
             else:
                 logger.error(f"Failed to register tool: {tool_name}")
-                status = 'failure'
+                status = "failure"
                 tool_name = None
                 final_message = f"Tool created but failed to register in manifest"
 
-        result = {
-            "status": status,
-            "result": tool_name,
-            "message": final_message
-        }
-        
+        result = {"status": status, "result": tool_name, "message": final_message}
+
         print(f"Tool Maker finished - Status: {status}, Tool: {tool_name}")
         logger.info(f"Tool Maker result: {result}")
-        
+
         return result
 
     except Exception as e:
         error_msg = f"Tool Maker execution failed: {str(e)}"
         logger.error(error_msg, exc_info=True)
-        
-        return {
-            "status": "failure",
-            "result": None,
-            "message": error_msg
-        }
+
+        return {"status": "failure", "result": None, "message": error_msg}

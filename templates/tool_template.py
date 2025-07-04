@@ -4,31 +4,41 @@ Tool Template System
 Provides templates and utilities for creating new tools with consistent
 structure, documentation, and best practices.
 """
+
 import os
 import re
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 
+
 class ToolTemplate:
     """Template for creating new tools with consistent structure"""
-    
+
     @staticmethod
-    def generate_tool_code(tool_name: str, description: str, parameters: Dict[str, str],
-                          return_type: str, author: str, user_id: str) -> str:
+    def generate_tool_code(
+        tool_name: str,
+        description: str,
+        parameters: Dict[str, str],
+        return_type: str,
+        author: str,
+        user_id: str,
+    ) -> str:
         """Generate tool code from template"""
-        
+
         # Convert tool_name to snake_case for filename
-        tool_filename = tool_name.lower().replace(' ', '_').replace('-', '_')
-        
+        tool_filename = tool_name.lower().replace(" ", "_").replace("-", "_")
+
         # Generate parameter documentation
         param_docs = ToolTemplate._generate_parameter_docs(parameters)
-        
+
         # Generate function signature
-        func_signature = ToolTemplate._generate_function_signature(tool_filename, parameters, return_type)
-        
+        func_signature = ToolTemplate._generate_function_signature(
+            tool_filename, parameters, return_type
+        )
+
         # Generate parameter validation
         param_validation = ToolTemplate._generate_parameter_validation(parameters)
-        
+
         template = f'''"""
 {tool_name}: {description}
 
@@ -136,64 +146,92 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Test failed: {{e}}")
 '''
-        
+
         return template
-    
+
     @staticmethod
     def _generate_parameter_docs(parameters: Dict[str, str]) -> str:
         """Generate parameter documentation string"""
         docs = []
         for param_name, param_type in parameters.items():
             docs.append(f"    {param_name} ({param_type}): Description of {param_name}")
-        
-        return '\n'.join(docs)
-    
+
+        return "\n".join(docs)
+
     @staticmethod
-    def _generate_function_signature(tool_name: str, parameters: Dict[str, str], return_type: str) -> str:
+    def _generate_function_signature(
+        tool_name: str, parameters: Dict[str, str], return_type: str
+    ) -> str:
         """Generate function signature with proper typing"""
         param_signature = []
         for param_name, param_type in parameters.items():
             param_signature.append(f"{param_name}: {param_type}")
-        
+
         signature = f"def {tool_name}({', '.join(param_signature)}) -> {return_type}"
         return signature
-    
+
     @staticmethod
     def _generate_parameter_validation(parameters: Dict[str, str]) -> str:
         """Generate parameter validation code"""
         validation_lines = []
-        
+
         for param_name, param_type in parameters.items():
             if param_type == "str":
-                validation_lines.append(f'        if not {param_name} or not isinstance({param_name}, str):')
-                validation_lines.append(f'            raise ValueError(f"{param_name} must be a non-empty string")')
+                validation_lines.append(
+                    f"        if not {param_name} or not isinstance({param_name}, str):"
+                )
+                validation_lines.append(
+                    f'            raise ValueError(f"{param_name} must be a non-empty string")'
+                )
             elif param_type == "int":
-                validation_lines.append(f'        if not isinstance({param_name}, int):')
-                validation_lines.append(f'            raise ValueError(f"{param_name} must be an integer")')
+                validation_lines.append(
+                    f"        if not isinstance({param_name}, int):"
+                )
+                validation_lines.append(
+                    f'            raise ValueError(f"{param_name} must be an integer")'
+                )
             elif param_type == "float":
-                validation_lines.append(f'        if not isinstance({param_name}, (int, float)):')
-                validation_lines.append(f'            raise ValueError(f"{param_name} must be a number")')
+                validation_lines.append(
+                    f"        if not isinstance({param_name}, (int, float)):"
+                )
+                validation_lines.append(
+                    f'            raise ValueError(f"{param_name} must be a number")'
+                )
             elif param_type == "bool":
-                validation_lines.append(f'        if not isinstance({param_name}, bool):')
-                validation_lines.append(f'            raise ValueError(f"{param_name} must be a boolean")')
+                validation_lines.append(
+                    f"        if not isinstance({param_name}, bool):"
+                )
+                validation_lines.append(
+                    f'            raise ValueError(f"{param_name} must be a boolean")'
+                )
             elif param_type == "Dict[str, Any]":
-                validation_lines.append(f'        if not isinstance({param_name}, dict):')
-                validation_lines.append(f'            raise ValueError(f"{param_name} must be a dictionary")')
+                validation_lines.append(
+                    f"        if not isinstance({param_name}, dict):"
+                )
+                validation_lines.append(
+                    f'            raise ValueError(f"{param_name} must be a dictionary")'
+                )
             elif param_type == "List[str]":
-                validation_lines.append(f'        if not isinstance({param_name}, list):')
-                validation_lines.append(f'            raise ValueError(f"{param_name} must be a list")')
-        
-        return '\n'.join(validation_lines)
-    
+                validation_lines.append(
+                    f"        if not isinstance({param_name}, list):"
+                )
+                validation_lines.append(
+                    f'            raise ValueError(f"{param_name} must be a list")'
+                )
+
+        return "\n".join(validation_lines)
+
     @staticmethod
-    def generate_test_code(tool_name: str, parameters: Dict[str, str], return_type: str) -> str:
+    def generate_test_code(
+        tool_name: str, parameters: Dict[str, str], return_type: str
+    ) -> str:
         """Generate test code for the tool"""
-        
-        tool_filename = tool_name.lower().replace(' ', '_').replace('-', '_')
-        
+
+        tool_filename = tool_name.lower().replace(" ", "_").replace("-", "_")
+
         # Generate test parameters
         test_params = ToolTemplate._generate_test_parameters(parameters)
-        
+
         template = f'''"""
 Tests for {tool_name} tool
 
@@ -308,27 +346,27 @@ class Test{tool_name.replace(' ', '').replace('-', '')}(unittest.TestCase):
 if __name__ == '__main__':
     unittest.main()
 '''
-        
+
         return template
-    
+
     @staticmethod
     def _get_test_value(param_type: str) -> str:
         """Get appropriate test value for a parameter type"""
         if param_type == "str":
             return '"test_string"'
         elif param_type == "int":
-            return '42'
+            return "42"
         elif param_type == "float":
-            return '3.14'
+            return "3.14"
         elif param_type == "bool":
-            return 'True'
+            return "True"
         elif param_type == "Dict[str, Any]":
             return '{"key": "value"}'
         elif param_type == "List[str]":
             return '["item1", "item2"]'
         else:
             return '"test_value"'
-    
+
     @staticmethod
     def _generate_test_parameters(parameters: Dict[str, str]) -> str:
         """Generate test parameter values"""
@@ -348,14 +386,20 @@ if __name__ == '__main__':
                 test_values.append(f'"{param_name}": ["item1", "item2"]')
             else:
                 test_values.append(f'"{param_name}": "test_value"')
-        
-        return '\n'.join(test_values)
-    
+
+        return "\n".join(test_values)
+
     @staticmethod
-    def generate_manifest_entry(tool_name: str, description: str, parameters: Dict[str, str],
-                               return_type: str, author: str, user_id: str) -> Dict[str, Any]:
+    def generate_manifest_entry(
+        tool_name: str,
+        description: str,
+        parameters: Dict[str, str],
+        return_type: str,
+        author: str,
+        user_id: str,
+    ) -> Dict[str, Any]:
         """Generate manifest entry for the tool"""
-        tool_filename = tool_name.lower().replace(' ', '_').replace('-', '_')
+        tool_filename = tool_name.lower().replace(" ", "_").replace("-", "_")
         return {
             "name": tool_filename,
             "module_path": f"tools/{tool_filename}.py",
@@ -367,5 +411,5 @@ if __name__ == '__main__':
             "created_by": user_id,
             "created_at": datetime.now().isoformat(),
             "version": "1.0.0",
-            "status": "active"
-        } 
+            "status": "active",
+        }

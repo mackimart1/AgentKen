@@ -7,8 +7,10 @@ try:
     from tools.write_to_file import write_to_file
 except ImportError:
     import sys
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
     from tools.write_to_file import write_to_file
+
 
 class TestWriteToFile(unittest.TestCase):
 
@@ -22,7 +24,7 @@ class TestWriteToFile(unittest.TestCase):
         if os.path.exists(self.TEST_DIR):
             shutil.rmtree(self.TEST_DIR)
         # Create the test directory (don't create subdirs yet)
-        os.makedirs(self.TEST_DIR, exist_ok=True) 
+        os.makedirs(self.TEST_DIR, exist_ok=True)
 
     def tearDown(self):
         """Remove the temporary directory and its contents after each test."""
@@ -33,12 +35,12 @@ class TestWriteToFile(unittest.TestCase):
         """Tests creating a new file with specific content."""
         content = "This is the first line.\nThis is the second line."
         path = self.TEST_FILE
-        
+
         # Invoke the tool
         result = write_to_file.invoke({"path": path, "content": content})
 
         self.assertTrue(os.path.exists(path))
-        with open(path, 'r', encoding='utf-8') as f:
+        with open(path, "r", encoding="utf-8") as f:
             read_content = f.read()
         self.assertEqual(read_content, content)
         self.assertIn(f"Successfully wrote to {path}", result)
@@ -50,14 +52,14 @@ class TestWriteToFile(unittest.TestCase):
         path = self.TEST_FILE
 
         # Create initial file
-        with open(path, 'w', encoding='utf-8') as f:
+        with open(path, "w", encoding="utf-8") as f:
             f.write(initial_content)
-        
+
         # Invoke the tool to overwrite
         result = write_to_file.invoke({"path": path, "content": new_content})
 
         self.assertTrue(os.path.exists(path))
-        with open(path, 'r', encoding='utf-8') as f:
+        with open(path, "r", encoding="utf-8") as f:
             read_content = f.read()
         self.assertEqual(read_content, new_content)
         self.assertIn(f"Successfully wrote to {path}", result)
@@ -65,10 +67,10 @@ class TestWriteToFile(unittest.TestCase):
     def test_create_nested_directories(self):
         """Tests creating necessary subdirectories."""
         content = "Log entry."
-        path = self.TEST_SUBDIR_FILE # Path includes a subdirectory 'subdir'
-        
+        path = self.TEST_SUBDIR_FILE  # Path includes a subdirectory 'subdir'
+
         # Ensure the subdirectory does NOT exist initially
-        self.assertFalse(os.path.exists(os.path.dirname(path))) 
+        self.assertFalse(os.path.exists(os.path.dirname(path)))
 
         # Invoke the tool
         result = write_to_file.invoke({"path": path, "content": content})
@@ -76,7 +78,7 @@ class TestWriteToFile(unittest.TestCase):
         # Check if both the directory and file were created
         self.assertTrue(os.path.exists(os.path.dirname(path)))
         self.assertTrue(os.path.exists(path))
-        with open(path, 'r', encoding='utf-8') as f:
+        with open(path, "r", encoding="utf-8") as f:
             read_content = f.read()
         self.assertEqual(read_content, content)
         self.assertIn(f"Successfully wrote to {path}", result)
@@ -85,5 +87,6 @@ class TestWriteToFile(unittest.TestCase):
     # and often requires specific environment setup or more advanced mocking.
     # We are focusing on the tool's intended successful operation here.
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

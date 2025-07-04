@@ -1,11 +1,13 @@
-\
 import json
 from typing import Dict, List, Any
 from langchain_core.tools import tool
 
+
 @tool
 def feature_engineer_for_agent_selection(
-    task_description: str, agent_metadata: List[Dict[str, Any]], context_info: Dict[str, Any]
+    task_description: str,
+    agent_metadata: List[Dict[str, Any]],
+    context_info: Dict[str, Any],
 ) -> Dict[str, Any]:
     """
     Extracts and structures features from task description, agent metadata,

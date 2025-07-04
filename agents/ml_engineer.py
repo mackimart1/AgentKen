@@ -2,6 +2,7 @@
 ML Engineer Agent: Designs machine learning models, assesses data requirements,
 requests necessary tools, and reports on feasibility and performance.
 """
+
 from typing import Literal
 
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, ToolMessage
@@ -18,12 +19,13 @@ try:
     from tools.assign_agent_to_task import assign_agent_to_task
     from tools.read_file import read_file
     from tools.write_to_file import write_to_file
+
     tools = [assign_agent_to_task, read_file, write_to_file]
     TOOLS_AVAILABLE = True
 except ImportError as e:
     print(f"Warning: Could not import all tools for ml_engineer: {e}")
     # Define tools as an empty list or handle appropriately if imports fail
-    tools = [] # Agent might be non-functional if tools are missing
+    tools = []  # Agent might be non-functional if tools are missing
     TOOLS_AVAILABLE = False
 
 system_prompt = """You are ml_engineer, a ReAct agent responsible for designing machine learning models,
@@ -39,12 +41,13 @@ You do NOT train or evaluate models directly unless specific tools for those act
 Your primary role is planning, design, and coordination with tool_maker.
 """
 
+
 def reasoning(state: MessagesState) -> dict:
     """
     ML Engineer's reasoning step.
     """
     print("ml_engineer is thinking...")
-    messages = state['messages']
+    messages = state["messages"]
     # Ensure tools were loaded before binding
     if not TOOLS_AVAILABLE:
         # Handle case where tools failed to load - maybe return an error message
@@ -57,6 +60,7 @@ def reasoning(state: MessagesState) -> dict:
     response = tooled_up_model.invoke(messages)
     return {"messages": [response]}
 
+
 def check_for_tool_calls(state: MessagesState) -> Literal["tools", END]:
     """
     Checks the last message for tool calls.
@@ -65,8 +69,12 @@ def check_for_tool_calls(state: MessagesState) -> Literal["tools", END]:
     last_message = messages[-1]
 
     # Only proceed to tools node if tools were successfully loaded and called
-    if TOOLS_AVAILABLE and hasattr(last_message, 'tool_calls') and last_message.tool_calls:
-        if hasattr(last_message, 'content') and not last_message.content.strip() == "":
+    if (
+        TOOLS_AVAILABLE
+        and hasattr(last_message, "tool_calls")
+        and last_message.tool_calls
+    ):
+        if hasattr(last_message, "content") and not last_message.content.strip() == "":
             print("ml_engineer thought this:")
             print(last_message.content)
         print()
@@ -75,6 +83,7 @@ def check_for_tool_calls(state: MessagesState) -> Literal["tools", END]:
         return "tools"
 
     return END
+
 
 # Ensure acting node is only added if tools are available
 if TOOLS_AVAILABLE:
@@ -86,7 +95,8 @@ else:
     def dummy_acting(state: MessagesState) -> dict:
         print("Error: ml_engineer cannot act, tools failed to load.")
         # Return state unchanged or add an error message
-        return {} # Or {"messages": [AIMessage(content="Tool loading failed.")]}
+        return {}  # Or {"messages": [AIMessage(content="Tool loading failed.")]}
+
     acting = dummy_acting
 
 
@@ -100,7 +110,7 @@ if TOOLS_AVAILABLE:
         "reasoning",
         check_for_tool_calls,
     )
-    workflow.add_edge("tools", 'reasoning')
+    workflow.add_edge("tools", "reasoning")
 else:
     # If no tools, reasoning directly leads to END
     workflow.set_entry_point("reasoning")
@@ -108,6 +118,7 @@ else:
 
 
 graph = workflow.compile()
+
 
 def ml_engineer(task: str) -> dict:
     """
@@ -121,64 +132,73 @@ def ml_engineer(task: str) -> dict:
     """
     # Check if graph compilation might have failed due to missing tools
     if not graph:
-         return {
+        return {
             "status": "failure",
             "result": None,
-            "message": "ML Engineer agent could not be initialized properly (graph compilation failed, likely due to missing tools)."
-         }
+            "message": "ML Engineer agent could not be initialized properly (graph compilation failed, likely due to missing tools).",
+        }
 
     try:
         final_state = graph.invoke(
-            {"messages": [SystemMessage(content=system_prompt), HumanMessage(content=task)]}
+            {
+                "messages": [
+                    SystemMessage(content=system_prompt),
+                    HumanMessage(content=task),
+                ]
+            }
         )
     except Exception as e:
         print(f"Error invoking ml_engineer graph: {e}")
         return {
             "status": "failure",
             "result": None,
-            "message": f"ML Engineer agent failed during execution: {e}"
+            "message": f"ML Engineer agent failed during execution: {e}",
         }
 
-
     last_message_content = ""
-    if final_state and 'messages' in final_state and final_state['messages']:
+    if final_state and "messages" in final_state and final_state["messages"]:
         last_message = final_state["messages"][-1]
         if isinstance(last_message, (AIMessage, HumanMessage)):
-             last_message_content = last_message.content
+            last_message_content = last_message.content
         elif isinstance(last_message, ToolMessage):
-             # Ensure content is stringified, as it might be complex data
-             last_message_content = str(last_message.content)
-        elif isinstance(last_message, list): # Handle potential list wrapping
+            # Ensure content is stringified, as it might be complex data
+            last_message_content = str(last_message.content)
+        elif isinstance(last_message, list):  # Handle potential list wrapping
             try:
                 # Access content of the last message if it's a list of messages
                 last_msg_in_list = last_message[-1]
-                if hasattr(last_msg_in_list, 'content'):
+                if hasattr(last_msg_in_list, "content"):
                     last_message_content = last_msg_in_list.content
                 else:
-                    last_message_content = str(last_msg_in_list) # Fallback
+                    last_message_content = str(last_msg_in_list)  # Fallback
             except (IndexError, AttributeError, TypeError):
-                 last_message_content = str(last_message) # Fallback string representation
+                last_message_content = str(
+                    last_message
+                )  # Fallback string representation
         else:
-             # Fallback for any other unexpected type
-             last_message_content = str(last_message)
+            # Fallback for any other unexpected type
+            last_message_content = str(last_message)
 
     # Basic status determination - refine as needed
-    status = 'success' if last_message_content else 'failure'
+    status = "success" if last_message_content else "failure"
     # More robust failure check
-    if "failed" in last_message_content.lower() or "unable to" in last_message_content.lower() or status == 'failure':
-        status = 'failure'
+    if (
+        "failed" in last_message_content.lower()
+        or "unable to" in last_message_content.lower()
+        or status == "failure"
+    ):
+        status = "failure"
         result_data = None
     else:
         # Result could be a path to a design doc, a feasibility summary, etc.
         result_data = last_message_content
 
-    print(f"ML Engineer finished task. Status: {status}. Final Message: {last_message_content}")
+    print(
+        f"ML Engineer finished task. Status: {status}. Final Message: {last_message_content}"
+    )
 
-    return {
-        "status": status,
-        "result": result_data,
-        "message": last_message_content
-    }
+    return {"status": status, "result": result_data, "message": last_message_content}
+
 
 # Example of how to potentially use the agent (for testing/dev)
 # if __name__ == '__main__':

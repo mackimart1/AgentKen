@@ -1,28 +1,26 @@
-
 import operator
 from typing import Union
 from langchain_core.tools import tool
 
 # Define allowed operators
 _ALLOWED_OPERATORS = {
-    '+': operator.add,
-    '-': operator.sub,
-    '*': operator.mul,
-    '/': operator.truediv,
+    "+": operator.add,
+    "-": operator.sub,
+    "*": operator.mul,
+    "/": operator.truediv,
 }
 
 # Define allowed names (only number conversions and operators)
 # Allow float and int for number parsing within the expression if needed
-_ALLOWED_NAMES = {
-    k: v for k, v in vars(__builtins__).items() if k in ['float', 'int']
-}
+_ALLOWED_NAMES = {k: v for k, v in vars(__builtins__).items() if k in ["float", "int"]}
 _ALLOWED_NAMES.update(_ALLOWED_OPERATORS)
 
+
 def _safe_eval(expr: str):
-    '''
+    """
     Safely evaluates a mathematical expression string.
     Restricts available names and operators.
-    '''
+    """
     try:
         # Compile the expression with restricted builtins and names
         # Using mode 'eval' ensures it's an expression
@@ -37,10 +35,10 @@ def _safe_eval(expr: str):
                 float(name)
                 is_number = True
             except ValueError:
-                pass # Not a number
+                pass  # Not a number
 
             if not is_number and name not in _ALLOWED_NAMES:
-                 raise NameError(f"Use of disallowed name '{name}'")
+                raise NameError(f"Use of disallowed name '{name}'")
 
         # Evaluate the expression with restricted globals and locals
         # Globals contain only safe builtins (none needed here as names are checked)
@@ -65,7 +63,7 @@ def _safe_eval(expr: str):
 
 @tool
 def calculator(expression: str) -> Union[float, str]:
-    '''Evaluates a basic mathematical expression (+, -, *, /).
+    """Evaluates a basic mathematical expression (+, -, *, /).
 
     Args:
         expression: A string representing the mathematical expression.
@@ -73,16 +71,15 @@ def calculator(expression: str) -> Union[float, str]:
 
     Returns:
         The numerical result of the expression or an error message string.
-    '''
+    """
     try:
         # Basic check for potentially unsafe characters (prevent dunder, statement sep)
-        if ';' in expression:
-             return "Error: Invalid characters (;) in expression."
-        if '__' in expression:
-             return "Error: Invalid characters (__) in expression."
+        if ";" in expression:
+            return "Error: Invalid characters (;) in expression."
+        if "__" in expression:
+            return "Error: Invalid characters (__) in expression."
 
-
-        result = _safe_eval(expression.strip()) # Strip whitespace
+        result = _safe_eval(expression.strip())  # Strip whitespace
         # Ensure the result is a number before returning
         if isinstance(result, (int, float)):
             return float(result)
