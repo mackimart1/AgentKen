@@ -1,0 +1,234 @@
+[
+  {
+    "name": "hermes",
+    "module_path": "agents/hermes.py",
+    "function_name": "hermes",
+    "description": "The central orchestrator. Handles user interaction, goal understanding, task planning, agent delegation, and result aggregation.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Unique identifier for the conversation thread."
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    },
+    "output_schema": {
+      "type": "object"
+    }
+  },
+  {
+    "name": "tool_maker",
+    "module_path": "agents/tool_maker.py",
+    "function_name": "tool_maker",
+    "description": "Develops and tests new LangChain tools based on task requirements.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "type": "string",
+          "description": "The description of the tool to be created."
+        }
+      },
+      "required": [
+        "task"
+      ]
+    },
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failure"
+          ]
+        },
+        "result": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "message"
+      ]
+    }
+  },
+  {
+    "name": "agent_smith",
+    "module_path": "agents/agent_smith.py",
+    "function_name": "agent_smith",
+    "description": "The architect responsible for creating and maintaining other agents.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "type": "string",
+          "description": "The description of the agent to be created or modified."
+        }
+      },
+      "required": [
+        "task"
+      ]
+    },
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failure"
+          ]
+        },
+        "result": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "message"
+      ]
+    }
+  },
+  {
+    "name": "web_researcher",
+    "module_path": "agents/web_researcher.py",
+    "function_name": "web_researcher",
+    "description": "Performs in-depth online research to provide the system with up-to-date information.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "The research query."
+        }
+      },
+      "required": [
+        "query"
+      ]
+    },
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failure"
+          ]
+        },
+        "result": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "message"
+      ]
+    }
+  },
+  {
+    "name": "code_executor",
+    "module_path": "agents/code_executor.py",
+    "function_name": "code_executor",
+    "description": "Executes code snippets (primarily Python initially) in a secure, sandboxed environment. Receives code as input and returns the standard output, standard error, or any execution errors.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "The code snippet to execute."
+        }
+      },
+      "required": [
+        "code"
+      ]
+    },
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failure"
+          ]
+        },
+        "stdout": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "stderr": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "error": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "message"
+      ]
+    }
+  },
+  {
+    "name": "test_data_processor",
+    "description": "Processes and analyzes test data",
+    "capabilities": [
+      "data_processing",
+      "analysis",
+      "reporting"
+    ],
+    "author": "Test Agent Smith",
+    "created_by": "agent_smith_user",
+    "created_at": "2025-07-03T20:15:20.909812",
+    "version": "1.0.0",
+    "status": "active",
+    "module_path": "agents/test_data_processor.py",
+    "function_name": "test_data_processor"
+  },
+  {
+    "name": "admin_test_agent",
+    "description": "Agent created by admin",
+    "capabilities": [
+      "admin_test"
+    ],
+    "author": "Admin User",
+    "created_by": "admin_user",
+    "created_at": "2025-07-03T20:15:21.457675",
+    "version": "1.0.0",
+    "status": "active",
+    "module_path": "agents/admin_test_agent.py",
+    "function_name": "admin_test_agent"
+  }
+]

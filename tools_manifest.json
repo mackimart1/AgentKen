@@ -1,0 +1,381 @@
+[
+  {
+    "name": "list_available_agents",
+    "module_path": "tools/list_available_agents.py",
+    "function_name": "list_available_agents",
+    "description": "List the name of available agents along with the type of task it's designed to be assigned.",
+    "input_schema": {},
+    "output_schema": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  {
+    "name": "assign_agent_to_task",
+    "module_path": "tools/assign_agent_to_task.py",
+    "function_name": "assign_agent_to_task",
+    "description": "Assign an agent to a task. Returns the structured response from the agent.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "agent_name": {
+          "type": "string",
+          "description": "The name of the agent to assign."
+        },
+        "task": {
+          "type": "string",
+          "description": "The description of the task for the agent."
+        }
+      },
+      "required": [
+        "agent_name",
+        "task"
+      ]
+    },
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failure",
+            "unknown"
+          ]
+        },
+        "result": {
+          "type": [
+            "object",
+            "string",
+            "null",
+            "array",
+            "number",
+            "boolean"
+          ]
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "message"
+      ]
+    }
+  },
+  {
+    "name": "predict_agent",
+    "module_path": "tools/predict_agent.py",
+    "function_name": "predict_agent",
+    "description": "Predicts the probability distribution of the best agent for a given task based on a trained model.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "task_description": {
+          "type": "string",
+          "description": "The description of the task to be assigned."
+        }
+      },
+      "required": [
+        "task_description"
+      ]
+    },
+    "output_schema": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number",
+        "format": "float"
+      }
+    }
+  },
+  {
+    "name": "scratchpad",
+    "module_path": "tools/scratchpad.py",
+    "function_name": "scratchpad",
+    "description": "A key-value store for temporary data with functions: write_to_scratchpad(key, value), read_from_scratchpad(key), list_scratchpad_keys(), clear_scratchpad(key), clear_all_scratchpad().",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "write",
+            "read",
+            "list_keys",
+            "clear",
+            "clear_all"
+          ]
+        },
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "action"
+      ]
+    },
+    "output_schema": {
+      "type": [
+        "string",
+        "array",
+        "null",
+        "object"
+      ]
+    }
+  },
+  {
+    "name": "secure_code_executor",
+    "module_path": "tools/secure_code_executor.py",
+    "function_name": "secure_code_executor",
+    "description": "Executes Python code snippets using subprocess. Captures stdout, stderr, and errors. Note: Not a fully secure sandbox.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "The Python code snippet to execute."
+        },
+        "language": {
+          "type": "string",
+          "description": "The language (default 'python').",
+          "default": "python"
+        }
+      },
+      "required": [
+        "code"
+      ]
+    },
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failure"
+          ]
+        },
+        "stdout": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "stderr": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "error": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "message"
+      ]
+    }
+  },
+  {
+    "name": "run_shell_command",
+    "module_path": "tools/run_shell_command.py",
+    "function_name": "run_shell_command",
+    "description": "Execute shell commands with enhanced security, timeout support, and detailed output. Supports working directory changes and comprehensive error handling.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "command": {
+          "type": "string",
+          "description": "The shell command to execute."
+        },
+        "timeout": {
+          "type": "integer",
+          "description": "Maximum execution time in seconds.",
+          "default": 30
+        },
+        "working_directory": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Directory to run the command in."
+        },
+        "capture_output": {
+          "type": "boolean",
+          "description": "Whether to capture stdout/stderr.",
+          "default": true
+        }
+      },
+      "required": [
+        "command"
+      ]
+    },
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failure"
+          ]
+        },
+        "stdout": {
+          "type": "string"
+        },
+        "stderr": {
+          "type": "string"
+        },
+        "returncode": {
+          "type": "integer"
+        },
+        "message": {
+          "type": "string"
+        },
+        "execution_time": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "status",
+        "stdout",
+        "stderr",
+        "returncode",
+        "message",
+        "execution_time"
+      ]
+    }
+  },
+  {
+    "name": "terminal_session",
+    "module_path": "tools/terminal_session.py",
+    "function_name": "terminal_session",
+    "description": "Advanced terminal session management with persistent state, command history, environment variables, and multi-command execution support.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "create",
+            "execute",
+            "list",
+            "destroy",
+            "info",
+            "history"
+          ],
+          "description": "Action to perform on the terminal session."
+        },
+        "session_id": {
+          "type": "string",
+          "description": "Unique identifier for the terminal session.",
+          "default": "default"
+        },
+        "command": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Command to execute (required for 'execute' action)."
+        },
+        "working_directory": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Directory to change to."
+        },
+        "environment_vars": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Environment variables to set."
+        },
+        "timeout": {
+          "type": "integer",
+          "description": "Command timeout in seconds.",
+          "default": 30
+        },
+        "multi_command": {
+          "type": "boolean",
+          "description": "Whether to treat command as multiple commands separated by newlines.",
+          "default": false
+        }
+      },
+      "required": [
+        "action"
+      ]
+    },
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failure",
+            "partial"
+          ]
+        },
+        "data": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "message"
+      ]
+    }
+  },
+  {
+    "name": "test_data_validator",
+    "description": "Validates test data format and content",
+    "parameters": {
+      "data": "str",
+      "format": "str",
+      "strict": "bool"
+    },
+    "return_type": "bool",
+    "author": "Test Tool Maker",
+    "created_by": "tool_maker_user",
+    "created_at": "2025-07-03T20:17:19.909290",
+    "version": "1.0.0",
+    "status": "active",
+    "module_path": "tools/test_data_validator.py",
+    "function_name": "test_data_validator"
+  },
+  {
+    "name": "admin_test_tool",
+    "description": "Tool created by admin",
+    "parameters": {
+      "admin_param": "str"
+    },
+    "return_type": "str",
+    "author": "Admin User",
+    "created_by": "admin_user",
+    "created_at": "2025-07-03T20:18:13.132818",
+    "version": "1.0.0",
+    "status": "active",
+    "module_path": "tools/admin_test_tool.py",
+    "function_name": "admin_test_tool"
+  }
+]
