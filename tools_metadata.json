@@ -1,0 +1,22 @@
+{
+  "sample_calculator": {
+    "name": "sample_calculator",
+    "status": "deprecated",
+    "created_at": "2025-07-15T21:01:58.380308",
+    "updated_at": "2025-07-15T21:01:58.383571",
+    "version": "1.0.0",
+    "author": "ToolMaker",
+    "description": "",
+    "category": "general",
+    "usage_count": 0,
+    "last_used": null,
+    "deprecation_date": "2025-07-15T21:01:58.383571",
+    "removal_date": "2025-08-14T21:01:58.383571",
+    "deprecation_reason": "Replaced by advanced_calculator with more features",
+    "replacement_tool": "advanced_calculator",
+    "dependencies": [],
+    "file_size": 0,
+    "complexity_score": 0,
+    "status_change_reason": "Testing new features"
+  }
+}

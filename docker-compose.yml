@@ -1,0 +1,11 @@
+services:
+  agentk:
+    build: ./
+    volumes:
+      - "./:/app"
+    env_file:
+      - .env
+    # Explicitly set PYTHONPATH to the working directory inside the container
+    environment:
+      - PYTHONPATH=/app
+    profiles: ["exclude-from-up"] # Do not up. Use `docker compose run --rm agentk` to get an attached container

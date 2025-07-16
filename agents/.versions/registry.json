@@ -1,0 +1,32 @@
+{
+  "sample_agent": [
+    {
+      "agent_name": "sample_agent",
+      "version": "v1.0",
+      "file_path": "agents\\.versions\\sample_agent\\v1.0\\sample_agent.py",
+      "original_path": "agents/sample_agent.py",
+      "created_at": "2025-07-15T20:42:15.352537",
+      "description": "Initial version of sample agent",
+      "metadata": {
+        "author": "demo",
+        "purpose": "demonstration"
+      },
+      "hash": "788ae0b7a96e2b3cdea91957e56b29c6a8042c5a5f4a5a20e3c43d8bd4bd52c3",
+      "size": 946
+    },
+    {
+      "agent_name": "sample_agent",
+      "version": "v1.1",
+      "file_path": "agents\\.versions\\sample_agent\\v1.1\\sample_agent.py",
+      "original_path": "agents/sample_agent.py",
+      "created_at": "2025-07-15T20:42:15.381559",
+      "description": "Added input validation",
+      "metadata": {
+        "author": "demo",
+        "change_type": "enhancement"
+      },
+      "hash": "19ecd05687bd1f36f267097e23e9b76b115c727cc8e1d6d9875d0fcb4d87a66b",
+      "size": 1040
+    }
+  ]
+}

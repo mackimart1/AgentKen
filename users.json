@@ -1,0 +1,50 @@
+{
+  "admin": {
+    "role": "admin",
+    "created_at": "2025-07-03T19:57:12.029774",
+    "created_by": "system",
+    "last_updated": "2025-07-03T19:57:12.029774"
+  },
+  "agent_smith_example": {
+    "role": "agent_smith",
+    "created_at": "2025-07-03T19:57:12.038457",
+    "created_by": "setup_script",
+    "last_updated": "2025-07-03T19:57:12.038457"
+  },
+  "tool_maker_example": {
+    "role": "tool_maker",
+    "created_at": "2025-07-03T19:57:12.039461",
+    "created_by": "setup_script",
+    "last_updated": "2025-07-03T19:57:12.039461"
+  },
+  "viewer_example": {
+    "role": "viewer",
+    "created_at": "2025-07-03T19:57:12.041469",
+    "created_by": "setup_script",
+    "last_updated": "2025-07-03T19:57:12.041469"
+  },
+  "admin_user": {
+    "role": "admin",
+    "created_at": "2025-07-03T21:09:19.818942",
+    "created_by": "system",
+    "last_updated": "2025-07-03T21:09:19.818942"
+  },
+  "agent_smith_user": {
+    "role": "agent_smith",
+    "created_at": "2025-07-03T21:09:19.819941",
+    "created_by": "system",
+    "last_updated": "2025-07-03T21:09:19.819941"
+  },
+  "tool_maker_user": {
+    "role": "tool_maker",
+    "created_at": "2025-07-03T21:09:19.820971",
+    "created_by": "system",
+    "last_updated": "2025-07-03T21:09:19.820971"
+  },
+  "viewer_user": {
+    "role": "viewer",
+    "created_at": "2025-07-03T21:09:19.821939",
+    "created_by": "system",
+    "last_updated": "2025-07-03T21:09:19.821939"
+  }
+}

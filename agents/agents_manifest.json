@@ -1,0 +1,14 @@
+{
+    "agents": [
+        {
+            "name": "task_tracker",
+            "description": "Monitors ongoing tasks, logs their statuses, and alerts Hermes if a task exceeds its expected completion time.",
+            "tools": [
+                "list_tasks",
+                "assign_agent_to_task"
+            ],
+            "module": "agents.task_tracker_agent",
+            "class": "TaskTrackerAgent"
+        }
+    ]
+}

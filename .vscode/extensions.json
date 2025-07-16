@@ -1,0 +1,70 @@
+{
+    "recommendations": [
+        // Python Development
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.black-formatter",
+        "ms-python.isort",
+        "ms-python.flake8",
+        "ms-python.pytest-adapter",
+        "ms-python.debugpy",
+        // Git and Version Control
+        "eamodio.gitlens",
+        "mhutchie.git-graph",
+        "donjayamanne.githistory",
+        // Markdown and Documentation
+        "yzhang.markdown-all-in-one",
+        "DavidAnson.vscode-markdownlint",
+        "bierner.markdown-preview-github-styles",
+        // JSON and YAML
+        "redhat.vscode-yaml",
+        "ms-vscode.vscode-json",
+        // Code Quality and Productivity
+        "streetsidesoftware.code-spell-checker",
+        "ms-vscode.vscode-typescript-next",
+        "bradlc.vscode-tailwindcss",
+        "esbenp.prettier-vscode",
+        // Python-specific Extensions
+        "kevinrose.vscode-python-indent",
+        "ms-python.pylint",
+        "ms-python.mypy-type-checker",
+        "ms-python.python-docstring-generator",
+        // Testing and Coverage
+        "littlefoxteam.vscode-python-test-adapter",
+        "ryanluker.vscode-coverage-gutters",
+        // AI and Code Assistance
+        "GitHub.copilot",
+        "GitHub.copilot-chat",
+        "ms-vscode.vscode-ai",
+        // Project Management
+        "ms-vscode.vscode-js-debug",
+        "ms-vscode.vscode-js-debug-companion",
+        "ms-vscode.remotehub",
+        // Theme and Icons
+        "PKief.material-icon-theme",
+        "zhuangtongfa.Material-theme",
+        "ms-vscode.Theme-TomorrowKit",
+        // Productivity
+        "ms-vscode.vscode-json",
+        "formulahendry.auto-rename-tag",
+        "christian-kohler.path-intellisense",
+        "ms-vscode.vscode-eslint",
+        // Database and API
+        "ms-mssql.mssql",
+        "ms-vscode.vscode-node-azure-pack",
+        "ms-vscode.vscode-docker",
+        // Security
+        "ms-vscode.vscode-node-azure-pack",
+        "ms-vscode.vscode-azure-account",
+        // Collaboration
+        "ms-vscode.live-server",
+        "ms-vscode.live-share",
+        "ms-vscode.live-share-audio",
+        "ms-vscode.live-share-extensionpack"
+    ],
+    "unwantedRecommendations": [
+        "ms-python.pylint",
+        "ms-python.pylint",
+        "ms-python.pylint"
+    ]
+}

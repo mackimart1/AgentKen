@@ -1,0 +1,3126 @@
+[
+    {
+        "name": "list_available_agents",
+        "module_path": "tools/list_available_agents.py",
+        "function_name": "list_available_agents",
+        "description": "List the name of available agents along with the type of task it's designed to be assigned.",
+        "input_schema": {},
+        "output_schema": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "string"
+            }
+        }
+    },
+    {
+        "name": "assign_agent_to_task",
+        "module_path": "tools/assign_agent_to_task.py",
+        "function_name": "assign_agent_to_task",
+        "description": "Assign an agent to a task. Returns the structured response from the agent.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "agent_name": {
+                    "type": "string",
+                    "description": "The name of the agent to assign."
+                },
+                "task": {
+                    "type": "string",
+                    "description": "The description of the task for the agent."
+                }
+            },
+            "required": [
+                "agent_name",
+                "task"
+            ]
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "success",
+                        "failure",
+                        "unknown"
+                    ]
+                },
+                "result": {
+                    "type": [
+                        "object",
+                        "string",
+                        "null",
+                        "array",
+                        "number",
+                        "boolean"
+                    ]
+                },
+                "message": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "status",
+                "message"
+            ]
+        }
+    },
+    {
+        "name": "predict_agent",
+        "module_path": "tools/predict_agent.py",
+        "function_name": "predict_agent",
+        "description": "Predicts the probability distribution of the best agent for a given task based on a trained model.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "task_description": {
+                    "type": "string",
+                    "description": "The description of the task to be assigned."
+                }
+            },
+            "required": [
+                "task_description"
+            ]
+        },
+        "output_schema": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "number",
+                "format": "float"
+            }
+        }
+    },
+    {
+        "name": "scratchpad",
+        "module_path": "tools/scratchpad.py",
+        "function_name": "scratchpad",
+        "description": "A key-value store for temporary data with functions: write_to_scratchpad(key, value), read_from_scratchpad(key), list_scratchpad_keys(), clear_scratchpad(key), clear_all_scratchpad().",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": [
+                        "write",
+                        "read",
+                        "list_keys",
+                        "clear",
+                        "clear_all"
+                    ]
+                },
+                "key": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "action"
+            ]
+        },
+        "output_schema": {
+            "type": [
+                "string",
+                "array",
+                "null",
+                "object"
+            ]
+        }
+    },
+    {
+        "name": "secure_code_executor",
+        "module_path": "tools/secure_code_executor.py",
+        "function_name": "secure_code_executor",
+        "description": "Executes Python code snippets using subprocess. Captures stdout, stderr, and errors. Note: Not a fully secure sandbox.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "description": "The Python code snippet to execute."
+                },
+                "language": {
+                    "type": "string",
+                    "description": "The language (default 'python').",
+                    "default": "python"
+                }
+            },
+            "required": [
+                "code"
+            ]
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "success",
+                        "failure"
+                    ]
+                },
+                "stdout": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "stderr": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "error": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "message": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "status",
+                "message"
+            ]
+        }
+    },
+    {
+        "name": "run_shell_command",
+        "module_path": "tools/run_shell_command.py",
+        "function_name": "run_shell_command",
+        "description": "Execute shell commands with enhanced security, timeout support, and detailed output. Supports working directory changes and comprehensive error handling.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "command": {
+                    "type": "string",
+                    "description": "The shell command to execute."
+                },
+                "timeout": {
+                    "type": "integer",
+                    "description": "Maximum execution time in seconds.",
+                    "default": 30
+                },
+                "working_directory": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Directory to run the command in."
+                },
+                "capture_output": {
+                    "type": "boolean",
+                    "description": "Whether to capture stdout/stderr.",
+                    "default": true
+                }
+            },
+            "required": [
+                "command"
+            ]
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "success",
+                        "failure"
+                    ]
+                },
+                "stdout": {
+                    "type": "string"
+                },
+                "stderr": {
+                    "type": "string"
+                },
+                "returncode": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "execution_time": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "status",
+                "stdout",
+                "stderr",
+                "returncode",
+                "message",
+                "execution_time"
+            ]
+        }
+    },
+    {
+        "name": "terminal_session",
+        "module_path": "tools/terminal_session.py",
+        "function_name": "terminal_session",
+        "description": "Advanced terminal session management with persistent state, command history, environment variables, and multi-command execution support.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": [
+                        "create",
+                        "execute",
+                        "list",
+                        "destroy",
+                        "info",
+                        "history"
+                    ],
+                    "description": "Action to perform on the terminal session."
+                },
+                "session_id": {
+                    "type": "string",
+                    "description": "Unique identifier for the terminal session.",
+                    "default": "default"
+                },
+                "command": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Command to execute (required for 'execute' action)."
+                },
+                "working_directory": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Directory to change to."
+                },
+                "environment_vars": {
+                    "type": [
+                        "object",
+                        "null"
+                    ],
+                    "description": "Environment variables to set."
+                },
+                "timeout": {
+                    "type": "integer",
+                    "description": "Command timeout in seconds.",
+                    "default": 30
+                },
+                "multi_command": {
+                    "type": "boolean",
+                    "description": "Whether to treat command as multiple commands separated by newlines.",
+                    "default": false
+                }
+            },
+            "required": [
+                "action"
+            ]
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "success",
+                        "failure",
+                        "partial"
+                    ]
+                },
+                "data": {
+                    "type": [
+                        "object",
+                        "null"
+                    ]
+                },
+                "message": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "status",
+                "message"
+            ]
+        }
+    },
+    {
+        "name": "test_data_validator",
+        "description": "Validates test data format and content",
+        "parameters": {
+            "data": "str",
+            "format": "str",
+            "strict": "bool"
+        },
+        "return_type": "bool",
+        "author": "Test Tool Maker",
+        "created_by": "tool_maker_user",
+        "created_at": "2025-07-03T21:09:20.145277",
+        "version": "1.0.0",
+        "status": "active",
+        "module_path": "tools/test_data_validator.py",
+        "function_name": "test_data_validator"
+    },
+    {
+        "name": "admin_test_tool",
+        "description": "Tool created by admin",
+        "parameters": {
+            "admin_param": "str"
+        },
+        "return_type": "str",
+        "author": "Admin User",
+        "created_by": "admin_user",
+        "created_at": "2025-07-03T21:09:20.724887",
+        "version": "1.0.0",
+        "status": "active",
+        "module_path": "tools/admin_test_tool.py",
+        "function_name": "admin_test_tool"
+    },
+    {
+        "name": "list_agents_detailed",
+        "module_path": "tools/list_agents_detailed.py",
+        "function_name": "list_agents_detailed",
+        "description": "Lists all available agents with detailed information including capabilities, descriptions, input/output schemas, and metadata.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "include_inactive": {
+                    "type": "boolean",
+                    "description": "Whether to include inactive agents in the listing",
+                    "default": false
+                },
+                "filter_by_capability": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Filter agents by a specific capability (e.g., 'data_processing', 'web_research')",
+                    "default": null
+                },
+                "format_output": {
+                    "type": "string",
+                    "description": "Output format: 'detailed', 'summary', or 'json'",
+                    "default": "detailed"
+                }
+            },
+            "required": []
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "System Architecture",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "list_tools_detailed",
+        "module_path": "tools/list_tools_detailed.py",
+        "function_name": "list_tools_detailed",
+        "description": "Lists all available tools with detailed information including descriptions, input/output schemas, parameters, and metadata.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "include_inactive": {
+                    "type": "boolean",
+                    "description": "Whether to include inactive tools in the listing",
+                    "default": false
+                },
+                "filter_by_category": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Filter tools by specific category (e.g., 'file_management', 'web_research', 'code_execution')",
+                    "default": null
+                },
+                "format_output": {
+                    "type": "string",
+                    "description": "Output format: 'detailed', 'summary', or 'json'",
+                    "default": "detailed"
+                }
+            },
+            "required": []
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "System Architecture",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "system_overview",
+        "module_path": "tools/system_overview.py",
+        "function_name": "system_overview",
+        "description": "Provides a comprehensive overview of the AgentK system including agents, tools, capabilities, and system statistics.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "include_stats": {
+                    "type": "boolean",
+                    "description": "Whether to include system statistics",
+                    "default": true
+                },
+                "include_capabilities": {
+                    "type": "boolean",
+                    "description": "Whether to include capability analysis",
+                    "default": true
+                },
+                "format_output": {
+                    "type": "string",
+                    "description": "Output format: 'detailed', 'summary', or 'json'",
+                    "default": "detailed"
+                }
+            },
+            "required": []
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "System Architecture",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "create_task",
+        "module_path": "tools/task_manager.py",
+        "function_name": "create_task",
+        "description": "Create a new task in the task management system with priority and dependency support.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "description": "Task description"
+                },
+                "priority": {
+                    "type": "string",
+                    "description": "Task priority: CRITICAL, HIGH, NORMAL, LOW",
+                    "default": "NORMAL"
+                },
+                "dependencies": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "List of task IDs this task depends on",
+                    "default": []
+                },
+                "assigned_agent": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Agent to assign this task to",
+                    "default": null
+                },
+                "estimated_duration": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "description": "Estimated duration in minutes",
+                    "default": null
+                },
+                "context": {
+                    "type": "object",
+                    "description": "Additional context for the task",
+                    "default": {}
+                }
+            },
+            "required": [
+                "description"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Hermes System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "update_task",
+        "module_path": "tools/task_manager.py",
+        "function_name": "update_task",
+        "description": "Update an existing task's status, priority, or results.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "task_id": {
+                    "type": "string",
+                    "description": "Task ID to update"
+                },
+                "status": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "New task status",
+                    "default": null
+                },
+                "priority": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "New task priority",
+                    "default": null
+                },
+                "result": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Task result",
+                    "default": null
+                },
+                "error_message": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Error message if task failed",
+                    "default": null
+                }
+            },
+            "required": [
+                "task_id"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Hermes System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "list_tasks",
+        "module_path": "tools/task_manager.py",
+        "function_name": "list_tasks",
+        "description": "List tasks with optional filtering by status, priority, or assigned agent.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "status_filter": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Filter by status",
+                    "default": null
+                },
+                "priority_filter": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Filter by priority",
+                    "default": null
+                },
+                "agent_filter": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Filter by assigned agent",
+                    "default": null
+                },
+                "include_completed": {
+                    "type": "boolean",
+                    "description": "Include completed tasks",
+                    "default": true
+                }
+            },
+            "required": []
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Hermes System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "get_next_task",
+        "module_path": "tools/task_manager.py",
+        "function_name": "get_next_task",
+        "description": "Get the next task to execute based on priority and dependencies.",
+        "input_schema": {
+            "type": "object",
+            "properties": {},
+            "required": []
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Hermes System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "save_context",
+        "module_path": "tools/context_manager_tool.py",
+        "function_name": "save_context",
+        "description": "Save context information for future sessions including preferences, patterns, and insights.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "session_id": {
+                    "type": "string",
+                    "description": "Session identifier"
+                },
+                "context_type": {
+                    "type": "string",
+                    "description": "Type of context: preference, pattern, insight, goal"
+                },
+                "data": {
+                    "type": "object",
+                    "description": "Context data to save"
+                },
+                "importance": {
+                    "type": "integer",
+                    "description": "Importance level (1-10)",
+                    "default": 5
+                }
+            },
+            "required": [
+                "session_id",
+                "context_type",
+                "data"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Hermes System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "load_context",
+        "module_path": "tools/context_manager_tool.py",
+        "function_name": "load_context",
+        "description": "Load context information from previous sessions for context awareness.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "session_id": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Session identifier",
+                    "default": null
+                },
+                "user_id": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "User identifier",
+                    "default": null
+                },
+                "context_type": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Filter by context type",
+                    "default": null
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Maximum number of context items to return",
+                    "default": 10
+                }
+            },
+            "required": []
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Hermes System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "create_adaptive_plan",
+        "module_path": "tools/plan_adapter_tool.py",
+        "function_name": "create_adaptive_plan",
+        "description": "Create an adaptive execution plan that can be modified based on execution feedback.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "goal": {
+                    "type": "string",
+                    "description": "The goal to create a plan for"
+                },
+                "constraints": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Any constraints to consider",
+                    "default": []
+                },
+                "available_agents": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Available agents",
+                    "default": []
+                },
+                "priority": {
+                    "type": "string",
+                    "description": "Plan priority",
+                    "default": "NORMAL"
+                }
+            },
+            "required": [
+                "goal"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Hermes System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "adapt_plan",
+        "module_path": "tools/plan_adapter_tool.py",
+        "function_name": "adapt_plan",
+        "description": "Adapt a plan based on execution failures using various adaptation strategies.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "original_plan": {
+                    "type": "string",
+                    "description": "Original plan text"
+                },
+                "failure_reason": {
+                    "type": "string",
+                    "description": "Reason for plan failure"
+                },
+                "failed_step": {
+                    "type": "string",
+                    "description": "The step that failed"
+                },
+                "adaptation_strategy": {
+                    "type": "string",
+                    "description": "Adaptation strategy to apply"
+                }
+            },
+            "required": [
+                "original_plan",
+                "failure_reason",
+                "failed_step",
+                "adaptation_strategy"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Hermes System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "create_agent_version",
+        "module_path": "tools/agent_versioning.py",
+        "function_name": "create_agent_version",
+        "description": "Create a new version of an agent with version control and rollback capabilities.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "agent_name": {
+                    "type": "string",
+                    "description": "Name of the agent to version"
+                },
+                "file_path": {
+                    "type": "string",
+                    "description": "Path to the agent file"
+                },
+                "metadata": {
+                    "type": "object",
+                    "description": "Additional metadata for the version",
+                    "default": {}
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Description of changes in this version",
+                    "default": ""
+                }
+            },
+            "required": [
+                "agent_name",
+                "file_path"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Agent Smith",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "rollback_agent_version",
+        "module_path": "tools/agent_versioning.py",
+        "function_name": "rollback_agent_version",
+        "description": "Rollback an agent to a specific previous version.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "agent_name": {
+                    "type": "string",
+                    "description": "Name of the agent to rollback"
+                },
+                "version": {
+                    "type": "string",
+                    "description": "Version to rollback to (e.g., 'v1.0')"
+                }
+            },
+            "required": [
+                "agent_name",
+                "version"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Agent Smith",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "list_agent_versions",
+        "module_path": "tools/agent_versioning.py",
+        "function_name": "list_agent_versions",
+        "description": "List all versions of an agent with metadata and creation dates.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "agent_name": {
+                    "type": "string",
+                    "description": "Name of the agent to list versions for"
+                }
+            },
+            "required": [
+                "agent_name"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Agent Smith",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "generate_agent_tests",
+        "module_path": "tools/agent_testing.py",
+        "function_name": "generate_agent_tests",
+        "description": "Generate comprehensive test suite for an agent including unit, integration, and performance tests.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "agent_name": {
+                    "type": "string",
+                    "description": "Name of the agent to generate tests for"
+                },
+                "agent_file_path": {
+                    "type": "string",
+                    "description": "Path to the agent file"
+                },
+                "test_types": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Types of tests to generate",
+                    "default": [
+                        "unit",
+                        "integration",
+                        "performance"
+                    ]
+                },
+                "custom_test_cases": {
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    },
+                    "description": "Custom test cases to include",
+                    "default": []
+                }
+            },
+            "required": [
+                "agent_name",
+                "agent_file_path"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Agent Smith",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "run_agent_tests",
+        "module_path": "tools/agent_testing.py",
+        "function_name": "run_agent_tests",
+        "description": "Run tests for an agent and return detailed results with pass/fail status.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "agent_name": {
+                    "type": "string",
+                    "description": "Name of the agent to test"
+                },
+                "test_file_path": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Path to test file (auto-detected if not provided)",
+                    "default": null
+                },
+                "test_types": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Specific test types to run (empty for all)",
+                    "default": []
+                },
+                "timeout": {
+                    "type": "integer",
+                    "description": "Test timeout in seconds",
+                    "default": 120
+                }
+            },
+            "required": [
+                "agent_name"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Agent Smith",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "validate_agent_code",
+        "module_path": "tools/agent_testing.py",
+        "function_name": "validate_agent_code",
+        "description": "Validate agent code for compliance and best practices with scoring system.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "agent_name": {
+                    "type": "string",
+                    "description": "Name of the agent to validate"
+                },
+                "agent_file_path": {
+                    "type": "string",
+                    "description": "Path to the agent file"
+                },
+                "validation_level": {
+                    "type": "string",
+                    "description": "Validation level: basic, standard, comprehensive",
+                    "default": "standard"
+                }
+            },
+            "required": [
+                "agent_name",
+                "agent_file_path"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Agent Smith",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "check_system_health",
+        "module_path": "tools/self_healing.py",
+        "function_name": "check_system_health",
+        "description": "Check system health including CPU, memory, disk usage and component status.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "component": {
+                    "type": "string",
+                    "description": "Component to check: system, agent_smith, memory, cpu",
+                    "default": "system"
+                },
+                "detailed": {
+                    "type": "boolean",
+                    "description": "Include detailed metrics",
+                    "default": false
+                }
+            },
+            "required": []
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Agent Smith",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "perform_recovery_action",
+        "module_path": "tools/self_healing.py",
+        "function_name": "perform_recovery_action",
+        "description": "Perform recovery actions for system health including memory cleanup, component restart, and rollback.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "recovery_type": {
+                    "type": "string",
+                    "description": "Type of recovery: memory_cleanup, restart_component, rollback"
+                },
+                "component": {
+                    "type": "string",
+                    "description": "Component to recover",
+                    "default": "agent_smith"
+                },
+                "parameters": {
+                    "type": "object",
+                    "description": "Recovery parameters",
+                    "default": {}
+                }
+            },
+            "required": [
+                "recovery_type"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Agent Smith",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "configure_monitoring",
+        "module_path": "tools/self_healing.py",
+        "function_name": "configure_monitoring",
+        "description": "Configure self-healing monitoring system with thresholds and intervals.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "description": "Enable/disable monitoring",
+                    "default": true
+                },
+                "check_interval": {
+                    "type": "integer",
+                    "description": "Check interval in seconds",
+                    "default": 30
+                },
+                "thresholds": {
+                    "type": "object",
+                    "description": "Health thresholds",
+                    "default": {}
+                }
+            },
+            "required": []
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Agent Smith",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "validate_tool_sandbox",
+        "module_path": "tools/tool_validation.py",
+        "function_name": "validate_tool_sandbox",
+        "description": "Validate a tool in a sandboxed environment for functionality and safety before deployment.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "tool_name": {
+                    "type": "string",
+                    "description": "Name of the tool to validate"
+                },
+                "tool_path": {
+                    "type": "string",
+                    "description": "Path to the tool file"
+                },
+                "validation_level": {
+                    "type": "string",
+                    "description": "Validation level: basic, standard, comprehensive",
+                    "default": "comprehensive"
+                }
+            },
+            "required": [
+                "tool_name",
+                "tool_path"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced ToolMaker",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "run_sandbox_test",
+        "module_path": "tools/tool_validation.py",
+        "function_name": "run_sandbox_test",
+        "description": "Run custom test code for a tool in a sandboxed environment.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "tool_name": {
+                    "type": "string",
+                    "description": "Name of the tool to test"
+                },
+                "test_code": {
+                    "type": "string",
+                    "description": "Python test code to execute"
+                },
+                "timeout": {
+                    "type": "integer",
+                    "description": "Test timeout in seconds",
+                    "default": 30
+                }
+            },
+            "required": [
+                "tool_name",
+                "test_code"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced ToolMaker",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "security_scan_tool",
+        "module_path": "tools/tool_validation.py",
+        "function_name": "security_scan_tool",
+        "description": "Perform comprehensive security scan on a tool file to identify potential risks.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "tool_path": {
+                    "type": "string",
+                    "description": "Path to the tool file to scan"
+                },
+                "scan_level": {
+                    "type": "string",
+                    "description": "Security scan level: basic, standard, strict",
+                    "default": "standard"
+                }
+            },
+            "required": [
+                "tool_path"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced ToolMaker",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "generate_tool_documentation",
+        "module_path": "tools/tool_documentation.py",
+        "function_name": "generate_tool_documentation",
+        "description": "Generate comprehensive documentation for a tool including usage examples and edge cases.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "tool_name": {
+                    "type": "string",
+                    "description": "Name of the tool to document"
+                },
+                "tool_path": {
+                    "type": "string",
+                    "description": "Path to the tool file"
+                },
+                "output_format": {
+                    "type": "string",
+                    "description": "Output format: markdown, html, json",
+                    "default": "markdown"
+                },
+                "include_examples": {
+                    "type": "boolean",
+                    "description": "Include usage examples",
+                    "default": true
+                }
+            },
+            "required": [
+                "tool_name",
+                "tool_path"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced ToolMaker",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "update_tool_documentation",
+        "module_path": "tools/tool_documentation.py",
+        "function_name": "update_tool_documentation",
+        "description": "Update existing tool documentation with additional information.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "tool_name": {
+                    "type": "string",
+                    "description": "Name of the tool to update documentation for"
+                },
+                "additional_info": {
+                    "type": "object",
+                    "description": "Additional information to include",
+                    "default": {}
+                }
+            },
+            "required": [
+                "tool_name"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced ToolMaker",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "validate_tool_documentation",
+        "module_path": "tools/tool_documentation.py",
+        "function_name": "validate_tool_documentation",
+        "description": "Validate tool documentation for completeness and quality.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "tool_name": {
+                    "type": "string",
+                    "description": "Name of the tool to validate documentation for"
+                },
+                "check_completeness": {
+                    "type": "boolean",
+                    "description": "Check documentation completeness",
+                    "default": true
+                }
+            },
+            "required": [
+                "tool_name"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced ToolMaker",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "deprecate_tool",
+        "module_path": "tools/tool_lifecycle.py",
+        "function_name": "deprecate_tool",
+        "description": "Mark a tool as deprecated with a removal timeline and replacement information.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "tool_name": {
+                    "type": "string",
+                    "description": "Name of the tool to deprecate"
+                },
+                "reason": {
+                    "type": "string",
+                    "description": "Reason for deprecation"
+                },
+                "replacement_tool": {
+                    "type": "string",
+                    "description": "Name of replacement tool",
+                    "default": ""
+                },
+                "deprecation_period_days": {
+                    "type": "integer",
+                    "description": "Days until removal",
+                    "default": 90
+                }
+            },
+            "required": [
+                "tool_name",
+                "reason"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced ToolMaker",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "update_tool_status",
+        "module_path": "tools/tool_lifecycle.py",
+        "function_name": "update_tool_status",
+        "description": "Update the lifecycle status of a tool (active, deprecated, obsolete, experimental, beta).",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "tool_name": {
+                    "type": "string",
+                    "description": "Name of the tool to update"
+                },
+                "new_status": {
+                    "type": "string",
+                    "description": "New status: active, deprecated, obsolete, experimental, beta"
+                },
+                "reason": {
+                    "type": "string",
+                    "description": "Reason for status change",
+                    "default": ""
+                }
+            },
+            "required": [
+                "tool_name",
+                "new_status"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced ToolMaker",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "remove_tool",
+        "module_path": "tools/tool_lifecycle.py",
+        "function_name": "remove_tool",
+        "description": "Remove a deprecated tool from the system with backup and safety checks.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "tool_name": {
+                    "type": "string",
+                    "description": "Name of the tool to remove"
+                },
+                "force": {
+                    "type": "boolean",
+                    "description": "Force removal even if not ready",
+                    "default": false
+                },
+                "backup": {
+                    "type": "boolean",
+                    "description": "Create backup before removal",
+                    "default": true
+                }
+            },
+            "required": [
+                "tool_name"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced ToolMaker",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "analyze_tool_usage",
+        "module_path": "tools/tool_lifecycle.py",
+        "function_name": "analyze_tool_usage",
+        "description": "Analyze tool usage patterns and identify unused or underused tools for potential deprecation.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "days_threshold": {
+                    "type": "integer",
+                    "description": "Days to consider for usage analysis",
+                    "default": 30
+                },
+                "include_stats": {
+                    "type": "boolean",
+                    "description": "Include detailed statistics",
+                    "default": true
+                }
+            },
+            "required": []
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced ToolMaker",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "fact_check_claim",
+        "module_path": "tools/fact_checking.py",
+        "function_name": "fact_check_claim",
+        "description": "Fact-check a specific claim against multiple authoritative sources with verification scoring.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "claim": {
+                    "type": "string",
+                    "description": "The claim to fact-check"
+                },
+                "sources": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "List of source content to verify against"
+                },
+                "context": {
+                    "type": "string",
+                    "description": "Additional context for the claim",
+                    "default": ""
+                }
+            },
+            "required": [
+                "claim",
+                "sources"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced WebResearcher",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "cross_verify_claims",
+        "module_path": "tools/fact_checking.py",
+        "function_name": "cross_verify_claims",
+        "description": "Cross-verify multiple claims against multiple sources with confidence thresholds.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "claims": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "List of claims to verify"
+                },
+                "source_urls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "List of source URLs to check against"
+                },
+                "verification_threshold": {
+                    "type": "number",
+                    "description": "Minimum confidence threshold for verification",
+                    "default": 0.7
+                }
+            },
+            "required": [
+                "claims",
+                "source_urls"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced WebResearcher",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "evaluate_source_credibility",
+        "module_path": "tools/fact_checking.py",
+        "function_name": "evaluate_source_credibility",
+        "description": "Evaluate the credibility of a source based on URL, content, and title with scoring system.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "URL of the source"
+                },
+                "content": {
+                    "type": "string",
+                    "description": "Content from the source",
+                    "default": ""
+                },
+                "title": {
+                    "type": "string",
+                    "description": "Title of the source",
+                    "default": ""
+                }
+            },
+            "required": [
+                "url"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced WebResearcher",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "rank_sources_by_trust",
+        "module_path": "tools/source_prioritization.py",
+        "function_name": "rank_sources_by_trust",
+        "description": "Rank sources by trust score, relevance, and recency with comprehensive scoring system.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "sources": {
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    },
+                    "description": "List of sources with url, title, content"
+                },
+                "query": {
+                    "type": "string",
+                    "description": "Original search query for relevance scoring"
+                },
+                "prioritize_recent": {
+                    "type": "boolean",
+                    "description": "Prioritize recent sources",
+                    "default": true
+                }
+            },
+            "required": [
+                "sources",
+                "query"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced WebResearcher",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "cache_search_results",
+        "module_path": "tools/source_prioritization.py",
+        "function_name": "cache_search_results",
+        "description": "Cache search results for frequent queries with TTL management.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "Search query to cache"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    },
+                    "description": "Search results to cache"
+                },
+                "ttl_hours": {
+                    "type": "integer",
+                    "description": "Time to live in hours",
+                    "default": 24
+                }
+            },
+            "required": [
+                "query",
+                "results"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced WebResearcher",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "get_cached_results",
+        "module_path": "tools/source_prioritization.py",
+        "function_name": "get_cached_results",
+        "description": "Retrieve cached search results for a query with expiration checking.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "Search query to retrieve from cache"
+                }
+            },
+            "required": [
+                "query"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced WebResearcher",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "multilingual_search_query",
+        "module_path": "tools/multilingual_research.py",
+        "function_name": "multilingual_search_query",
+        "description": "Generate multilingual search queries and coordinate searches across languages.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "Search query to translate and search in multiple languages"
+                },
+                "target_languages": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Language codes to search in",
+                    "default": [
+                        "en",
+                        "es",
+                        "fr",
+                        "de"
+                    ]
+                },
+                "include_translation": {
+                    "type": "boolean",
+                    "description": "Include translation of results",
+                    "default": true
+                }
+            },
+            "required": [
+                "query"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced WebResearcher",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "translate_research_content",
+        "module_path": "tools/multilingual_research.py",
+        "function_name": "translate_research_content",
+        "description": "Translate research content from source language to target language with formatting preservation.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "description": "Content to translate"
+                },
+                "source_language": {
+                    "type": "string",
+                    "description": "Source language code"
+                },
+                "target_language": {
+                    "type": "string",
+                    "description": "Target language code",
+                    "default": "en"
+                },
+                "preserve_formatting": {
+                    "type": "boolean",
+                    "description": "Preserve original formatting",
+                    "default": true
+                }
+            },
+            "required": [
+                "content",
+                "source_language"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced WebResearcher",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "detect_content_language",
+        "module_path": "tools/multilingual_research.py",
+        "function_name": "detect_content_language",
+        "description": "Detect the language of text content with confidence scoring and recommendations.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "text": {
+                    "type": "string",
+                    "description": "Text to detect language for"
+                },
+                "confidence_threshold": {
+                    "type": "number",
+                    "description": "Minimum confidence for detection",
+                    "default": 0.8
+                }
+            },
+            "required": [
+                "text"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced WebResearcher",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "scratchpad_write",
+        "module_path": "tools/scratchpad_enhanced.py",
+        "function_name": "scratchpad_write",
+        "description": "Write a value to the enhanced scratchpad with persistence, access control, and versioning.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string",
+                    "description": "Key to write to"
+                },
+                "value": {
+                    "type": "string",
+                    "description": "Value to store"
+                },
+                "agent": {
+                    "type": "string",
+                    "description": "Agent performing the operation",
+                    "default": "system"
+                },
+                "permissions": {
+                    "type": [
+                        "object",
+                        "null"
+                    ],
+                    "description": "Permissions for the key (for new keys)",
+                    "default": null
+                },
+                "metadata": {
+                    "type": [
+                        "object",
+                        "null"
+                    ],
+                    "description": "Additional metadata",
+                    "default": null
+                }
+            },
+            "required": [
+                "key",
+                "value"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Scratchpad System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "2.0.0",
+        "status": "active"
+    },
+    {
+        "name": "scratchpad_read",
+        "module_path": "tools/scratchpad_enhanced.py",
+        "function_name": "scratchpad_read",
+        "description": "Read a value from the enhanced scratchpad with version support and access control.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string",
+                    "description": "Key to read from"
+                },
+                "agent": {
+                    "type": "string",
+                    "description": "Agent performing the operation",
+                    "default": "system"
+                },
+                "version": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "description": "Specific version to read (None for latest)",
+                    "default": null
+                }
+            },
+            "required": [
+                "key"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Scratchpad System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "2.0.0",
+        "status": "active"
+    },
+    {
+        "name": "scratchpad_delete",
+        "module_path": "tools/scratchpad_enhanced.py",
+        "function_name": "scratchpad_delete",
+        "description": "Delete a key from the enhanced scratchpad with access control and history tracking.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string",
+                    "description": "Key to delete"
+                },
+                "agent": {
+                    "type": "string",
+                    "description": "Agent performing the operation",
+                    "default": "system"
+                }
+            },
+            "required": [
+                "key"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Scratchpad System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "2.0.0",
+        "status": "active"
+    },
+    {
+        "name": "scratchpad_list_keys",
+        "module_path": "tools/scratchpad_enhanced.py",
+        "function_name": "scratchpad_list_keys",
+        "description": "List all keys accessible to the agent with optional metadata.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "agent": {
+                    "type": "string",
+                    "description": "Agent performing the operation",
+                    "default": "system"
+                },
+                "include_metadata": {
+                    "type": "boolean",
+                    "description": "Include metadata in response",
+                    "default": false
+                }
+            },
+            "required": []
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Scratchpad System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "2.0.0",
+        "status": "active"
+    },
+    {
+        "name": "scratchpad_get_history",
+        "module_path": "tools/scratchpad_enhanced.py",
+        "function_name": "scratchpad_get_history",
+        "description": "Get complete version history for a key with access control.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string",
+                    "description": "Key to get history for"
+                },
+                "agent": {
+                    "type": "string",
+                    "description": "Agent performing the operation",
+                    "default": "system"
+                },
+                "limit": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "description": "Limit number of history entries",
+                    "default": null
+                }
+            },
+            "required": [
+                "key"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Scratchpad System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "2.0.0",
+        "status": "active"
+    },
+    {
+        "name": "scratchpad_rollback",
+        "module_path": "tools/scratchpad_enhanced.py",
+        "function_name": "scratchpad_rollback",
+        "description": "Rollback a key to a specific version with access control and history tracking.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string",
+                    "description": "Key to rollback"
+                },
+                "version": {
+                    "type": "integer",
+                    "description": "Version to rollback to"
+                },
+                "agent": {
+                    "type": "string",
+                    "description": "Agent performing the operation",
+                    "default": "system"
+                }
+            },
+            "required": [
+                "key",
+                "version"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Scratchpad System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "2.0.0",
+        "status": "active"
+    },
+    {
+        "name": "scratchpad_set_permissions",
+        "module_path": "tools/scratchpad_enhanced.py",
+        "function_name": "scratchpad_set_permissions",
+        "description": "Set fine-grained permissions for an agent on a specific key.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string",
+                    "description": "Key to set permissions for"
+                },
+                "agent": {
+                    "type": "string",
+                    "description": "Agent to set permissions for"
+                },
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "List of permissions to grant (read, write, delete, admin)"
+                },
+                "requesting_agent": {
+                    "type": "string",
+                    "description": "Agent requesting the permission change",
+                    "default": "admin"
+                }
+            },
+            "required": [
+                "key",
+                "agent",
+                "permissions"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Scratchpad System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "2.0.0",
+        "status": "active"
+    },
+    {
+        "name": "scratchpad_get_permissions",
+        "module_path": "tools/scratchpad_enhanced.py",
+        "function_name": "scratchpad_get_permissions",
+        "description": "Get permissions information for a key with access control.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string",
+                    "description": "Key to get permissions for"
+                },
+                "requesting_agent": {
+                    "type": "string",
+                    "description": "Agent requesting the permissions",
+                    "default": "admin"
+                }
+            },
+            "required": [
+                "key"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Scratchpad System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "2.0.0",
+        "status": "active"
+    },
+    {
+        "name": "scratchpad_clear_all",
+        "module_path": "tools/scratchpad_enhanced.py",
+        "function_name": "scratchpad_clear_all",
+        "description": "Clear all scratchpad data with admin-only access control.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "agent": {
+                    "type": "string",
+                    "description": "Agent performing the operation",
+                    "default": "admin"
+                }
+            },
+            "required": []
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Scratchpad System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "2.0.0",
+        "status": "active"
+    },
+    {
+        "name": "scratchpad_get_stats",
+        "module_path": "tools/scratchpad_enhanced.py",
+        "function_name": "scratchpad_get_stats",
+        "description": "Get comprehensive scratchpad statistics and system information.",
+        "input_schema": {
+            "type": "object",
+            "properties": {},
+            "required": []
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Scratchpad System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "2.0.0",
+        "status": "active"
+    },
+    {
+        "name": "secure_code_executor_enhanced",
+        "module_path": "tools/secure_code_executor_enhanced.py",
+        "function_name": "secure_code_executor_enhanced",
+        "description": "Execute code in a secure sandboxed environment with Docker containerization, multi-language support, and comprehensive resource limits.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "description": "Code to execute"
+                },
+                "language": {
+                    "type": "string",
+                    "description": "Programming language (python, javascript, bash, ruby, go, rust, java, cpp, c)",
+                    "default": "python"
+                },
+                "environment": {
+                    "type": "string",
+                    "description": "Execution environment (docker for containerized, native for local)",
+                    "default": "docker"
+                },
+                "max_execution_time": {
+                    "type": "integer",
+                    "description": "Maximum execution time in seconds",
+                    "default": 30
+                },
+                "max_memory_mb": {
+                    "type": "integer",
+                    "description": "Maximum memory usage in MB",
+                    "default": 512
+                },
+                "max_cpu_percent": {
+                    "type": "number",
+                    "description": "Maximum CPU usage percentage",
+                    "default": 80.0
+                },
+                "network_access": {
+                    "type": "boolean",
+                    "description": "Allow network access",
+                    "default": false
+                },
+                "file_system_access": {
+                    "type": "boolean",
+                    "description": "Allow file system access",
+                    "default": false
+                }
+            },
+            "required": [
+                "code"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Secure Code Executor",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "2.0.0",
+        "status": "active"
+    },
+    {
+        "name": "validate_code_security",
+        "module_path": "tools/secure_code_executor_enhanced.py",
+        "function_name": "validate_code_security",
+        "description": "Validate code for security risks before execution with comprehensive security analysis.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "description": "Code to validate"
+                },
+                "language": {
+                    "type": "string",
+                    "description": "Programming language",
+                    "default": "python"
+                },
+                "strict_mode": {
+                    "type": "boolean",
+                    "description": "Enable strict security validation",
+                    "default": true
+                }
+            },
+            "required": [
+                "code"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Secure Code Executor",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "2.0.0",
+        "status": "active"
+    },
+    {
+        "name": "get_executor_stats",
+        "module_path": "tools/secure_code_executor_enhanced.py",
+        "function_name": "get_executor_stats",
+        "description": "Get comprehensive statistics about code execution including success rates and resource usage.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "include_history": {
+                    "type": "boolean",
+                    "description": "Include detailed execution history",
+                    "default": false
+                }
+            },
+            "required": []
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Secure Code Executor",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "2.0.0",
+        "status": "active"
+    },
+    {
+        "name": "list_supported_languages",
+        "module_path": "tools/secure_code_executor_enhanced.py",
+        "function_name": "list_supported_languages",
+        "description": "List all supported programming languages with their configurations and capabilities.",
+        "input_schema": {
+            "type": "object",
+            "properties": {},
+            "required": []
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Secure Code Executor",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "2.0.0",
+        "status": "active"
+    },
+    {
+        "name": "get_resource_limits_info",
+        "module_path": "tools/secure_code_executor_enhanced.py",
+        "function_name": "get_resource_limits_info",
+        "description": "Get information about available resource limits, defaults, and recommended configurations.",
+        "input_schema": {
+            "type": "object",
+            "properties": {},
+            "required": []
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Secure Code Executor",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "2.0.0",
+        "status": "active"
+    },
+    {
+        "name": "terminal_session_create_enhanced",
+        "module_path": "tools/terminal_session_enhanced.py",
+        "function_name": "terminal_session_create_enhanced",
+        "description": "Create an enhanced terminal session with template and collaboration support.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "session_id": {
+                    "type": "string",
+                    "description": "Unique session identifier"
+                },
+                "session_type": {
+                    "type": "string",
+                    "description": "Session type: standard, template, collaborative",
+                    "default": "standard"
+                },
+                "working_directory": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Initial working directory",
+                    "default": null
+                },
+                "environment_vars": {
+                    "type": [
+                        "object",
+                        "null"
+                    ],
+                    "description": "Environment variables",
+                    "default": null
+                },
+                "template_id": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Template ID to apply",
+                    "default": null
+                },
+                "agent_id": {
+                    "type": "string",
+                    "description": "Agent creating the session",
+                    "default": "system"
+                },
+                "agent_name": {
+                    "type": "string",
+                    "description": "Agent name",
+                    "default": "System"
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Session description",
+                    "default": ""
+                },
+                "max_participants": {
+                    "type": "integer",
+                    "description": "Maximum participants for collaborative sessions",
+                    "default": 10
+                }
+            },
+            "required": [
+                "session_id"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Terminal Session System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "2.0.0",
+        "status": "active"
+    },
+    {
+        "name": "terminal_session_execute_enhanced",
+        "module_path": "tools/terminal_session_enhanced.py",
+        "function_name": "terminal_session_execute_enhanced",
+        "description": "Execute a command in an enhanced terminal session with collaboration support.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "session_id": {
+                    "type": "string",
+                    "description": "Session identifier"
+                },
+                "command": {
+                    "type": "string",
+                    "description": "Command to execute"
+                },
+                "agent_id": {
+                    "type": "string",
+                    "description": "Agent executing the command",
+                    "default": "system"
+                },
+                "timeout": {
+                    "type": "integer",
+                    "description": "Command timeout in seconds",
+                    "default": 30
+                },
+                "auto_advance_template": {
+                    "type": "boolean",
+                    "description": "Auto-advance template progress",
+                    "default": true
+                }
+            },
+            "required": [
+                "session_id",
+                "command"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Terminal Session System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "2.0.0",
+        "status": "active"
+    },
+    {
+        "name": "terminal_session_execute_template",
+        "module_path": "tools/terminal_session_enhanced.py",
+        "function_name": "terminal_session_execute_template",
+        "description": "Execute a session template with pre-configured commands for common workflows.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "session_id": {
+                    "type": "string",
+                    "description": "Session identifier"
+                },
+                "template_id": {
+                    "type": "string",
+                    "description": "Template ID to execute"
+                },
+                "agent_id": {
+                    "type": "string",
+                    "description": "Agent executing the template",
+                    "default": "system"
+                },
+                "timeout": {
+                    "type": "integer",
+                    "description": "Command timeout in seconds",
+                    "default": 30
+                },
+                "interactive": {
+                    "type": "boolean",
+                    "description": "Interactive template execution",
+                    "default": false
+                }
+            },
+            "required": [
+                "session_id",
+                "template_id"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Terminal Session System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "2.0.0",
+        "status": "active"
+    },
+    {
+        "name": "terminal_session_join",
+        "module_path": "tools/terminal_session_enhanced.py",
+        "function_name": "terminal_session_join",
+        "description": "Join a collaborative terminal session for multi-agent cooperation.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "session_id": {
+                    "type": "string",
+                    "description": "Session identifier"
+                },
+                "agent_id": {
+                    "type": "string",
+                    "description": "Agent joining the session"
+                },
+                "agent_name": {
+                    "type": "string",
+                    "description": "Agent name"
+                },
+                "role": {
+                    "type": "string",
+                    "description": "Agent role: owner, collaborator, observer, admin",
+                    "default": "collaborator"
+                }
+            },
+            "required": [
+                "session_id",
+                "agent_id",
+                "agent_name"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Terminal Session System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "2.0.0",
+        "status": "active"
+    },
+    {
+        "name": "terminal_session_lock",
+        "module_path": "tools/terminal_session_enhanced.py",
+        "function_name": "terminal_session_lock",
+        "description": "Lock a terminal session for exclusive access during critical operations.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "session_id": {
+                    "type": "string",
+                    "description": "Session identifier"
+                },
+                "agent_id": {
+                    "type": "string",
+                    "description": "Agent requesting the lock"
+                }
+            },
+            "required": [
+                "session_id",
+                "agent_id"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Terminal Session System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "2.0.0",
+        "status": "active"
+    },
+    {
+        "name": "terminal_session_unlock",
+        "module_path": "tools/terminal_session_enhanced.py",
+        "function_name": "terminal_session_unlock",
+        "description": "Unlock a terminal session to allow collaborative access.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "session_id": {
+                    "type": "string",
+                    "description": "Session identifier"
+                },
+                "agent_id": {
+                    "type": "string",
+                    "description": "Agent requesting the unlock"
+                }
+            },
+            "required": [
+                "session_id",
+                "agent_id"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Terminal Session System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "2.0.0",
+        "status": "active"
+    },
+    {
+        "name": "terminal_session_create_template",
+        "module_path": "tools/terminal_session_enhanced.py",
+        "function_name": "terminal_session_create_template",
+        "description": "Create a new session template for common workflows and automation.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Template name"
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Template description"
+                },
+                "category": {
+                    "type": "string",
+                    "description": "Template category: development, deployment, debugging, testing, maintenance, analysis"
+                },
+                "commands": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "List of commands"
+                },
+                "environment_vars": {
+                    "type": [
+                        "object",
+                        "null"
+                    ],
+                    "description": "Environment variables",
+                    "default": null
+                },
+                "working_directory": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Working directory",
+                    "default": null
+                },
+                "prerequisites": {
+                    "type": [
+                        "array",
+                        "null"
+                    ],
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Prerequisites",
+                    "default": null
+                },
+                "expected_duration": {
+                    "type": "integer",
+                    "description": "Expected duration in minutes",
+                    "default": 30
+                },
+                "created_by": {
+                    "type": "string",
+                    "description": "Creator identifier",
+                    "default": "user"
+                },
+                "tags": {
+                    "type": [
+                        "array",
+                        "null"
+                    ],
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Template tags",
+                    "default": null
+                }
+            },
+            "required": [
+                "name",
+                "description",
+                "category",
+                "commands"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Terminal Session System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "2.0.0",
+        "status": "active"
+    },
+    {
+        "name": "terminal_session_list_templates",
+        "module_path": "tools/terminal_session_enhanced.py",
+        "function_name": "terminal_session_list_templates",
+        "description": "List available session templates with optional filtering by category and tags.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Filter by category",
+                    "default": null
+                },
+                "tags": {
+                    "type": [
+                        "array",
+                        "null"
+                    ],
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Filter by tags",
+                    "default": null
+                }
+            },
+            "required": []
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Terminal Session System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "2.0.0",
+        "status": "active"
+    },
+    {
+        "name": "terminal_session_get_collaboration_events",
+        "module_path": "tools/terminal_session_enhanced.py",
+        "function_name": "terminal_session_get_collaboration_events",
+        "description": "Get collaboration events for real-time debugging and cooperative workflows.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "session_id": {
+                    "type": "string",
+                    "description": "Session identifier"
+                },
+                "agent_id": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Filter by agent ID",
+                    "default": null
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Maximum number of events to return",
+                    "default": 50
+                }
+            },
+            "required": [
+                "session_id"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Terminal Session System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "2.0.0",
+        "status": "active"
+    },
+    {
+        "name": "terminal_session_get_info_enhanced",
+        "module_path": "tools/terminal_session_enhanced.py",
+        "function_name": "terminal_session_get_info_enhanced",
+        "description": "Get detailed information about an enhanced terminal session including collaboration status.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "session_id": {
+                    "type": "string",
+                    "description": "Session identifier"
+                }
+            },
+            "required": [
+                "session_id"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Enhanced Terminal Session System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "2.0.0",
+        "status": "active"
+    },
+    {
+        "name": "log_error_centralized",
+        "module_path": "tools/error_handling_system.py",
+        "function_name": "log_error_centralized",
+        "description": "Log an error to the centralized error handling system with analysis and suggestions.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "exception_type": {
+                    "type": "string",
+                    "description": "Type of exception that occurred"
+                },
+                "error_message": {
+                    "type": "string",
+                    "description": "Error message"
+                },
+                "agent_id": {
+                    "type": "string",
+                    "description": "Agent that encountered the error"
+                },
+                "tool_name": {
+                    "type": "string",
+                    "description": "Tool where error occurred"
+                },
+                "function_name": {
+                    "type": "string",
+                    "description": "Function where error occurred"
+                },
+                "parameters": {
+                    "type": "object",
+                    "description": "Function parameters when error occurred"
+                },
+                "stack_trace": {
+                    "type": "string",
+                    "description": "Stack trace of the error",
+                    "default": ""
+                },
+                "session_id": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Session ID if available",
+                    "default": null
+                },
+                "user_id": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "User ID if available",
+                    "default": null
+                },
+                "environment": {
+                    "type": "string",
+                    "description": "Environment where error occurred",
+                    "default": "production"
+                }
+            },
+            "required": [
+                "exception_type",
+                "error_message",
+                "agent_id",
+                "tool_name",
+                "function_name",
+                "parameters"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Error Handling & Recovery System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "resolve_error_centralized",
+        "module_path": "tools/error_handling_system.py",
+        "function_name": "resolve_error_centralized",
+        "description": "Mark an error as resolved with resolution notes for tracking and analysis.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "error_id": {
+                    "type": "string",
+                    "description": "Error ID to resolve"
+                },
+                "resolution_notes": {
+                    "type": "string",
+                    "description": "Notes describing how the error was resolved"
+                }
+            },
+            "required": [
+                "error_id",
+                "resolution_notes"
+            ]
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Error Handling & Recovery System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "get_error_analysis",
+        "module_path": "tools/error_handling_system.py",
+        "function_name": "get_error_analysis",
+        "description": "Get comprehensive error analysis including patterns, statistics, and actionable fix suggestions.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "hours_back": {
+                    "type": "integer",
+                    "description": "Hours to look back for analysis",
+                    "default": 24
+                },
+                "include_suggestions": {
+                    "type": "boolean",
+                    "description": "Include fix suggestions in the analysis",
+                    "default": true
+                }
+            },
+            "required": []
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Error Handling & Recovery System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "get_errors_by_pattern",
+        "module_path": "tools/error_handling_system.py",
+        "function_name": "get_errors_by_pattern",
+        "description": "Get errors matching specific patterns for detailed failure analysis and troubleshooting.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "agent_id": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Filter by agent ID",
+                    "default": null
+                },
+                "tool_name": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Filter by tool name",
+                    "default": null
+                },
+                "error_category": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Filter by error category (network, authentication, permission, resource, validation, timeout, configuration, dependency, logic, unknown)",
+                    "default": null
+                },
+                "hours_back": {
+                    "type": "integer",
+                    "description": "Hours to look back",
+                    "default": 24
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Maximum number of errors to return",
+                    "default": 100
+                }
+            },
+            "required": []
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Error Handling & Recovery System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "get_retry_statistics",
+        "module_path": "tools/error_handling_system.py",
+        "function_name": "get_retry_statistics",
+        "description": "Get retry statistics for monitoring retry effectiveness and exponential backoff performance.",
+        "input_schema": {
+            "type": "object",
+            "properties": {},
+            "required": []
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Error Handling & Recovery System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "get_error_categories_info",
+        "module_path": "tools/error_handling_system.py",
+        "function_name": "get_error_categories_info",
+        "description": "Get information about available error categories, severity levels, and retry strategies.",
+        "input_schema": {
+            "type": "object",
+            "properties": {},
+            "required": []
+        },
+        "output_schema": {
+            "type": "string"
+        },
+        "author": "Error Handling & Recovery System",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "analyze_log_file",
+        "module_path": "tools/log_analyzer.py",
+        "function_name": "analyze_log_file",
+        "description": "Analyze a log file and return comprehensive analysis results including error patterns, performance metrics, and recommendations.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "file_path": {
+                    "type": "string",
+                    "description": "Path to the log file to analyze"
+                },
+                "max_lines": {
+                    "type": "integer",
+                    "description": "Maximum number of lines to analyze",
+                    "default": 1000
+                }
+            },
+            "required": [
+                "file_path"
+            ]
+        },
+        "output_schema": {
+            "type": "string",
+            "description": "JSON string containing detailed log analysis results"
+        },
+        "author": "System Architecture",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "analyze_log_content",
+        "module_path": "tools/log_analyzer.py",
+        "function_name": "analyze_log_content",
+        "description": "Analyze log content directly and return comprehensive analysis results including error patterns, performance metrics, and recommendations.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "log_content": {
+                    "type": "string",
+                    "description": "Raw log content to analyze"
+                }
+            },
+            "required": [
+                "log_content"
+            ]
+        },
+        "output_schema": {
+            "type": "string",
+            "description": "JSON string containing detailed log analysis results"
+        },
+        "author": "System Architecture",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "find_log_files",
+        "module_path": "tools/log_analyzer.py",
+        "function_name": "find_log_files",
+        "description": "Find log files in a directory matching a pattern with file information and accessibility status.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "directory": {
+                    "type": "string",
+                    "description": "Directory to search for log files"
+                },
+                "pattern": {
+                    "type": "string",
+                    "description": "File pattern to match",
+                    "default": "*.log"
+                }
+            },
+            "required": [
+                "directory"
+            ]
+        },
+        "output_schema": {
+            "type": "string",
+            "description": "JSON string containing list of found log files with metadata"
+        },
+        "author": "System Architecture",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    },
+    {
+        "name": "analyze_error_patterns",
+        "module_path": "tools/log_analyzer.py",
+        "function_name": "analyze_error_patterns",
+        "description": "Analyze error patterns in log content and identify recurring issues with pattern frequency and examples.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "log_content": {
+                    "type": "string",
+                    "description": "Raw log content to analyze"
+                },
+                "min_occurrences": {
+                    "type": "integer",
+                    "description": "Minimum occurrences to consider a pattern",
+                    "default": 2
+                }
+            },
+            "required": [
+                "log_content"
+            ]
+        },
+        "output_schema": {
+            "type": "string",
+            "description": "JSON string containing error pattern analysis with frequencies and examples"
+        },
+        "author": "System Architecture",
+        "created_at": "2025-01-27T00:00:00.000000",
+        "version": "1.0.0",
+        "status": "active"
+    }
+]

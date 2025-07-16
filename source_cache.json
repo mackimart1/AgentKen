@@ -1,0 +1,37 @@
+{
+  "query_cache": {
+    "7e33527183f68300409c4f8ad2a7fefc": {
+      "query": "climate change research",
+      "results": [
+        {
+          "url": "https://nature.com/climate-study",
+          "title": "Climate Change Research in Nature Journal",
+          "content": "This peer-reviewed study published in Nature demonstrates significant climate trends based on 30 years of data collection and analysis."
+        },
+        {
+          "url": "https://blog.climate-skeptic.com",
+          "title": "Why Climate Change is Fake",
+          "content": "This shocking truth about climate change will amaze you! Scientists don't want you to know this secret."
+        },
+        {
+          "url": "https://nasa.gov/climate-data",
+          "title": "NASA Climate Change and Global Warming",
+          "content": "NASA's climate data shows clear evidence of global warming trends with comprehensive satellite measurements and ground-based observations."
+        },
+        {
+          "url": "https://wikipedia.org/climate-change",
+          "title": "Climate Change - Wikipedia",
+          "content": "Climate change refers to long-term shifts in global temperatures and weather patterns, primarily caused by human activities since the mid-20th century."
+        }
+      ],
+      "cached_at": "2025-07-15T21:16:09.992079",
+      "expires_at": "2025-07-16T21:16:09.992079",
+      "ttl_hours": 24,
+      "result_count": 4
+    }
+  },
+  "trust_scores": {
+    "example-news.com": 75.0
+  },
+  "last_updated": "2025-07-15T21:16:10.000536"
+}

@@ -1,0 +1,158 @@
+{
+    // Python Configuration
+    "python.defaultInterpreterPath": "./venv/bin/python",
+    "python.terminal.activateEnvironment": true,
+    "python.terminal.activateEnvInCurrentTerminal": true,
+    
+    // Linting and Formatting
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": true,
+    "python.linting.flake8Args": [
+        "--max-line-length=88",
+        "--extend-ignore=E203,W503"
+    ],
+    "python.formatting.provider": "black",
+    "python.formatting.blackArgs": [
+        "--line-length=88"
+    ],
+    "python.sortImports.args": [
+        "--profile=black",
+        "--line-length=88"
+    ],
+    
+    // Editor Settings
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+    },
+    "editor.rulers": [88],
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false,
+    
+    // File Associations
+    "files.associations": {
+        "*.py": "python",
+        "*.json": "json",
+        "*.md": "markdown",
+        "*.yml": "yaml",
+        "*.yaml": "yaml"
+    },
+    
+    // Search and Exclude
+    "search.exclude": {
+        "**/venv": true,
+        "**/__pycache__": true,
+        "**/*.pyc": true,
+        "**/.pytest_cache": true,
+        "**/coverage": true,
+        "**/.coverage": true,
+        "**/htmlcov": true,
+        "**/dist": true,
+        "**/build": true,
+        "**/.git": true
+    },
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/*.pyc": true,
+        "**/.pytest_cache": true,
+        "**/coverage": true,
+        "**/.coverage": true,
+        "**/htmlcov": true,
+        "**/dist": true,
+        "**/build": true
+    },
+    
+    // Git Configuration
+    "git.enableSmartCommit": true,
+    "git.confirmSync": false,
+    "git.autofetch": true,
+    "git.autofetchPeriod": 180,
+    
+    // Terminal Configuration
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "terminal.integrated.defaultProfile.osx": "bash",
+    "terminal.integrated.env.windows": {
+        "PYTHONPATH": "${workspaceFolder}"
+    },
+    "terminal.integrated.env.linux": {
+        "PYTHONPATH": "${workspaceFolder}"
+    },
+    "terminal.integrated.env.osx": {
+        "PYTHONPATH": "${workspaceFolder}"
+    },
+    
+    // Testing Configuration
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestArgs": [
+        ".",
+        "-v",
+        "--tb=short"
+    ],
+    
+    // IntelliSense and Auto-completion
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.autoSearchPaths": true,
+    "python.analysis.extraPaths": [
+        "./core",
+        "./templates",
+        "./agents",
+        "./tools"
+    ],
+    
+    // Code Actions
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.autoSearchPaths": true,
+    
+    // Debugging
+    "python.debugging.console": "integratedTerminal",
+    
+    // Extensions Recommendations
+    "extensions.ignoreRecommendations": false,
+    
+    // Workspace-specific settings
+    "files.watcherExclude": {
+        "**/venv/**": true,
+        "**/__pycache__/**": true,
+        "**/.git/**": true,
+        "**/node_modules/**": true
+    },
+    
+    // Markdown Configuration
+    "markdown.preview.breaks": true,
+    "markdown.preview.linkify": true,
+    
+    // JSON Configuration
+    "json.schemas": [
+        {
+            "fileMatch": ["agents_manifest.json"],
+            "url": "https://json.schemastore.org/manifest"
+        },
+        {
+            "fileMatch": ["tools_manifest.json"],
+            "url": "https://json.schemastore.org/manifest"
+        }
+    ],
+    
+    // YAML Configuration
+    "yaml.format.enable": true,
+    "yaml.validate": true,
+    
+    // Task Configuration
+    "task.autoDetect": "on",
+    
+    // Explorer Configuration
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.expand": false,
+    "explorer.fileNesting.patterns": {
+        "*.py": "${capture}.py, ${capture}_test.py, test_${capture}.py",
+        "*.md": "${capture}.md, README.md, CHANGELOG.md",
+        "*.json": "${capture}.json, ${capture}.schema.json",
+        "*.yml": "${capture}.yml, ${capture}.yaml",
+        "*.yaml": "${capture}.yaml, ${capture}.yml"
+    }
+} 

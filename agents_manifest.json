@@ -1,0 +1,813 @@
+[
+  {
+    "name": "hermes",
+    "module_path": "agents/hermes.py",
+    "function_name": "hermes",
+    "description": "The central orchestrator. Handles user interaction, goal understanding, task planning, agent delegation, and result aggregation.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Unique identifier for the conversation thread."
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    },
+    "output_schema": {
+      "type": "object"
+    }
+  },
+  {
+    "name": "tool_maker",
+    "module_path": "agents/tool_maker.py",
+    "function_name": "tool_maker",
+    "description": "Develops and tests new LangChain tools based on task requirements.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "type": "string",
+          "description": "The description of the tool to be created."
+        }
+      },
+      "required": [
+        "task"
+      ]
+    },
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failure"
+          ]
+        },
+        "result": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "message"
+      ]
+    }
+  },
+  {
+    "name": "agent_smith",
+    "module_path": "agents/agent_smith.py",
+    "function_name": "agent_smith",
+    "description": "The architect responsible for creating and maintaining other agents.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "type": "string",
+          "description": "The description of the agent to be created or modified."
+        }
+      },
+      "required": [
+        "task"
+      ]
+    },
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failure"
+          ]
+        },
+        "result": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "message"
+      ]
+    }
+  },
+  {
+    "name": "web_researcher",
+    "module_path": "agents/web_researcher.py",
+    "function_name": "web_researcher",
+    "description": "Performs in-depth online research to provide the system with up-to-date information.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "The research query."
+        }
+      },
+      "required": [
+        "query"
+      ]
+    },
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failure"
+          ]
+        },
+        "result": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "message"
+      ]
+    }
+  },
+  {
+    "name": "code_executor",
+    "module_path": "agents/code_executor.py",
+    "function_name": "code_executor",
+    "description": "Executes code snippets (primarily Python initially) in a secure, sandboxed environment. Receives code as input and returns the standard output, standard error, or any execution errors.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "The code snippet to execute."
+        }
+      },
+      "required": [
+        "code"
+      ]
+    },
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failure"
+          ]
+        },
+        "stdout": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "stderr": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "error": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "message"
+      ]
+    }
+  },
+  {
+    "name": "test_data_processor",
+    "description": "Processes and analyzes test data",
+    "capabilities": [
+      "data_processing",
+      "analysis",
+      "reporting"
+    ],
+    "author": "Test Agent Smith",
+    "created_by": "agent_smith_user",
+    "created_at": "2025-07-03T21:09:19.825468",
+    "version": "1.0.0",
+    "status": "active",
+    "module_path": "agents/test_data_processor.py",
+    "function_name": "test_data_processor"
+  },
+  {
+    "name": "admin_test_agent",
+    "description": "Agent created by admin",
+    "capabilities": [
+      "admin_test"
+    ],
+    "author": "Admin User",
+    "created_by": "admin_user",
+    "created_at": "2025-07-03T21:09:20.361864",
+    "version": "1.0.0",
+    "status": "active",
+    "module_path": "agents/admin_test_agent.py",
+    "function_name": "admin_test_agent"
+  },
+  {
+    "name": "debugging_agent",
+    "module_path": "agents/debugging_agent.py",
+    "function_name": "debugging_agent",
+    "description": "Autonomous debugging agent that detects, logs, and resolves system or task-level failures using contextual trace analysis and feedback loops.",
+    "capabilities": [
+      "failure_detection",
+      "failure_resolution",
+      "pattern_analysis",
+      "system_health_check",
+      "contextual_trace_analysis",
+      "automatic_mitigation"
+    ],
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "type": "string",
+          "description": "The debugging task to perform (detect, analyze, health check, etc.)"
+        }
+      },
+      "required": [
+        "task"
+      ]
+    },
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failure"
+          ]
+        },
+        "result": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "message"
+      ]
+    },
+    "author": "System Architecture",
+    "created_at": "2025-01-27T00:00:00.000000",
+    "version": "1.0.0",
+    "status": "active"
+  },
+  {
+    "name": "learning_agent",
+    "module_path": "agents/learning_agent.py",
+    "function_name": "learning_agent",
+    "description": "Learning agent that reviews historical task data to identify performance bottlenecks, recommend agent behavior optimizations, and suggest creation of new tools or sub-agents.",
+    "capabilities": [
+      "performance_analysis",
+      "optimization_recommendations",
+      "tool_recommendations",
+      "agent_recommendations",
+      "continuous_learning",
+      "pattern_recognition",
+      "bottleneck_identification"
+    ],
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "type": "string",
+          "description": "The learning task to perform (analyze, recommend tools, recommend agents, etc.)"
+        }
+      },
+      "required": [
+        "task"
+      ]
+    },
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failure"
+          ]
+        },
+        "result": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "message"
+      ]
+    },
+    "author": "System Architecture",
+    "created_at": "2025-01-27T00:00:00.000000",
+    "version": "1.0.0",
+    "status": "active"
+  },
+  {
+    "name": "security_agent",
+    "module_path": "agents/security_agent.py",
+    "function_name": "security_agent",
+    "description": "Security agent that continuously monitors all agent interactions, tool executions, and external communications to detect anomalies, unauthorized access, or potential vulnerabilities.",
+    "capabilities": [
+      "threat_monitoring",
+      "vulnerability_assessment",
+      "access_control",
+      "incident_response",
+      "security_audit",
+      "anomaly_detection",
+      "communication_monitoring"
+    ],
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "type": "string",
+          "description": "The security task to perform (monitor, scan, audit, etc.)"
+        }
+      },
+      "required": [
+        "task"
+      ]
+    },
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failure"
+          ]
+        },
+        "result": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "message"
+      ]
+    },
+    "author": "System Architecture",
+    "created_at": "2025-01-27T00:00:00.000000",
+    "version": "1.0.0",
+    "status": "active"
+  },
+  {
+    "name": "software_engineer",
+    "module_path": "agents/software_engineer.py",
+    "function_name": "software_engineer",
+    "description": "A ReAct agent specialized in software development tasks including creating, modifying, and deleting code, managing files, running shell commands, and executing code securely.",
+    "capabilities": [
+      "code_development",
+      "file_management",
+      "code_execution",
+      "shell_commands",
+      "software_testing",
+      "debugging",
+      "project_management"
+    ],
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "type": "string",
+          "description": "The software development task to perform"
+        }
+      },
+      "required": [
+        "task"
+      ]
+    },
+    "output_schema": {
+      "type": "string",
+      "description": "The final response from the software engineer agent"
+    },
+    "author": "System Architecture",
+    "created_at": "2025-01-27T00:00:00.000000",
+    "version": "1.0.0",
+    "status": "active"
+  },
+  {
+    "name": "hermes_enhanced",
+    "module_path": "agents/hermes_enhanced.py",
+    "function_name": "enhanced_hermes",
+    "description": "Enhanced Hermes orchestrator with context awareness, dynamic plan adaptation, and multi-tasking capabilities. Provides advanced session management, real-time plan modification, and priority-based task scheduling.",
+    "capabilities": [
+      "context_awareness",
+      "cross_session_memory",
+      "dynamic_plan_adaptation",
+      "multi_tasking",
+      "priority_scheduling",
+      "real_time_adaptation",
+      "performance_tracking",
+      "user_preference_learning",
+      "pattern_recognition",
+      "failure_recovery"
+    ],
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Session identifier"
+        },
+        "user_id": {
+          "type": ["string", "null"],
+          "description": "User identifier for cross-session context",
+          "default": null
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    },
+    "output_schema": {
+      "type": "object",
+      "description": "Enhanced session result with context and performance data"
+    },
+    "author": "Enhanced System Architecture",
+    "created_at": "2025-01-27T00:00:00.000000",
+    "version": "2.0.0",
+    "status": "active"
+  },
+  {
+    "name": "agent_smith_enhanced",
+    "module_path": "agents/agent_smith_enhanced.py",
+    "function_name": "agent_smith_enhanced",
+    "description": "Enhanced Agent Smith with self-healing capabilities, agent versioning, and comprehensive testing framework. Provides robust agent development with quality assurance and autonomous recovery.",
+    "capabilities": [
+      "agent_development",
+      "self_healing",
+      "agent_versioning",
+      "automated_testing",
+      "code_validation",
+      "rollback_management",
+      "health_monitoring",
+      "recovery_automation",
+      "test_generation",
+      "quality_assurance"
+    ],
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "type": "string",
+          "description": "The description of the agent to be created with enhanced features"
+        }
+      },
+      "required": [
+        "task"
+      ]
+    },
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failure"
+          ]
+        },
+        "result": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Enhanced result with versioning and testing information"
+        },
+        "message": {
+          "type": "string"
+        },
+        "phase": {
+          "type": "string",
+          "description": "Final phase reached in enhanced workflow"
+        },
+        "files_created": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "List of files created during agent development"
+        },
+        "errors": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "List of errors encountered"
+        },
+        "test_results": {
+          "type": "object",
+          "description": "Comprehensive test results"
+        },
+        "version_info": {
+          "type": ["object", "null"],
+          "description": "Version information for the created agent"
+        },
+        "health_status": {
+          "type": "object",
+          "description": "System health status during creation"
+        },
+        "rollback_available": {
+          "type": "boolean",
+          "description": "Whether rollback is available for this agent"
+        }
+      },
+      "required": [
+        "status",
+        "message"
+      ]
+    },
+    "author": "Enhanced System Architecture",
+    "created_at": "2025-01-27T00:00:00.000000",
+    "version": "2.0.0",
+    "status": "active"
+  },
+  {
+    "name": "tool_maker_enhanced",
+    "module_path": "agents/tool_maker_enhanced.py",
+    "function_name": "enhanced_tool_maker",
+    "description": "Enhanced ToolMaker with sandboxed validation, auto-documentation generation, and complete lifecycle management. Provides robust tool development with comprehensive quality assurance.",
+    "capabilities": [
+      "tool_development",
+      "sandboxed_validation",
+      "security_scanning",
+      "auto_documentation",
+      "lifecycle_management",
+      "deprecation_process",
+      "usage_analysis",
+      "quality_assurance",
+      "backup_management",
+      "compliance_checking"
+    ],
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "type": "string",
+          "description": "The description of the tool to be created with enhanced validation and documentation"
+        }
+      },
+      "required": [
+        "task"
+      ]
+    },
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failure"
+          ]
+        },
+        "result": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Name of the created tool"
+        },
+        "message": {
+          "type": "string"
+        },
+        "validation_report": {
+          "type": ["object", "null"],
+          "description": "Comprehensive validation results"
+        },
+        "documentation_path": {
+          "type": ["string", "null"],
+          "description": "Path to generated documentation"
+        },
+        "lifecycle_status": {
+          "type": ["object", "null"],
+          "description": "Tool lifecycle management information"
+        }
+      },
+      "required": [
+        "status",
+        "message"
+      ]
+    },
+    "author": "Enhanced System Architecture",
+    "created_at": "2025-01-27T00:00:00.000000",
+    "version": "2.0.0",
+    "status": "active"
+  },
+  {
+    "name": "web_researcher_enhanced",
+    "module_path": "agents/web_researcher_enhanced.py",
+    "function_name": "enhanced_web_researcher",
+    "description": "Enhanced WebResearcher with fact-checking, source prioritization, and multi-language support. Provides comprehensive knowledge gathering with quality assurance and cross-verification.",
+    "capabilities": [
+      "fact_checking",
+      "source_prioritization",
+      "multilingual_research",
+      "cross_verification",
+      "credibility_assessment",
+      "query_caching",
+      "translation_support",
+      "language_detection",
+      "trust_scoring",
+      "research_synthesis"
+    ],
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "type": "string",
+          "description": "The research task with enhanced fact-checking and multilingual capabilities"
+        }
+      },
+      "required": [
+        "task"
+      ]
+    },
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "partial_success",
+            "disputed_information",
+            "failure"
+          ]
+        },
+        "result": {
+          "type": ["object", "null"],
+          "description": "Enhanced research result with fact-checking and source analysis"
+        },
+        "message": {
+          "type": "string"
+        },
+        "fact_checks": {
+          "type": "array",
+          "items": {"type": "object"},
+          "description": "Comprehensive fact-checking results"
+        },
+        "source_analysis": {
+          "type": "object",
+          "description": "Source credibility and trust analysis"
+        },
+        "confidence_metrics": {
+          "type": "object",
+          "description": "Research confidence and verification metrics"
+        }
+      },
+      "required": [
+        "status",
+        "message"
+      ]
+    },
+    "author": "Enhanced System Architecture",
+    "created_at": "2025-01-27T00:00:00.000000",
+    "version": "2.0.0",
+    "status": "active"
+  },
+  {
+    "name": "error_handler",
+    "module_path": "agents/error_handler.py",
+    "function_name": "error_handler",
+    "description": "Centralized error-handling agent that logs exceptions, analyzes failure patterns, and suggests actionable fixes across the system. Specializes in comprehensive error management and system reliability.",
+    "capabilities": [
+      "error_analysis",
+      "pattern_recognition",
+      "fix_recommendations",
+      "system_health_monitoring",
+      "resolution_coordination",
+      "trend_analysis",
+      "intelligent_categorization",
+      "retry_optimization",
+      "failure_prediction",
+      "cross_agent_coordination"
+    ],
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "type": "string",
+          "description": "The error handling task to perform (analyze errors, suggest fixes, monitor health, etc.)"
+        }
+      },
+      "required": [
+        "task"
+      ]
+    },
+    "output_schema": {
+      "type": "string",
+      "description": "Comprehensive error analysis and recommendations"
+    },
+    "author": "Error Handling & Recovery System",
+    "created_at": "2025-01-27T00:00:00.000000",
+    "version": "1.0.0",
+    "status": "active"
+  },
+  {
+    "name": "task_tracker_agent",
+    "module_path": "agents/task_tracker_agent.py",
+    "function_name": "task_tracker_agent",
+    "description": "Comprehensive task management agent for the AgentK system. Provides task creation, tracking, progress monitoring, and analytics with priority-based organization and dependency management.",
+    "capabilities": [
+      "task_creation",
+      "task_tracking",
+      "progress_monitoring",
+      "priority_management",
+      "dependency_tracking",
+      "task_analytics",
+      "status_management",
+      "assignment_tracking",
+      "deadline_monitoring",
+      "task_reporting"
+    ],
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "type": "string",
+          "description": "The task management request or command (create task, list tasks, update status, etc.)"
+        }
+      },
+      "required": [
+        "task"
+      ]
+    },
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failure"
+          ]
+        },
+        "result": {
+          "type": [
+            "string",
+            "array",
+            "object",
+            "null"
+          ],
+          "description": "Task management result (task ID, task list, summary, etc.)"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "message"
+      ]
+    },
+    "author": "Agent Smith Enhanced",
+    "created_at": "2025-01-16T02:25:00.000000",
+    "version": "1.0.0",
+    "status": "active"
+  }
+]

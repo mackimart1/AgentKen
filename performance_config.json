@@ -1,0 +1,54 @@
+{
+  "database": {
+    "path": "performance_metrics.db",
+    "retention_hours": 168
+  },
+  "alerts": {
+    "enabled": true,
+    "rules": [
+      {
+        "component_id": "*",
+        "metric_type": "latency",
+        "threshold": 5000.0,
+        "condition": "greater_than",
+        "level": "warning",
+        "description": "High latency detected"
+      },
+      {
+        "component_id": "*",
+        "metric_type": "success_rate",
+        "threshold": 90.0,
+        "condition": "less_than",
+        "level": "error",
+        "description": "Low success rate detected"
+      },
+      {
+        "component_id": "*",
+        "metric_type": "failure_rate",
+        "threshold": 10.0,
+        "condition": "greater_than",
+        "level": "warning",
+        "description": "High failure rate detected"
+      }
+    ]
+  },
+  "dashboard": {
+    "enabled": true,
+    "host": "localhost",
+    "port": 5001,
+    "auto_refresh_seconds": 30
+  },
+  "monitoring": {
+    "enabled": true,
+    "auto_discover_components": true,
+    "track_system_metrics": true,
+    "track_agent_metrics": true,
+    "track_tool_metrics": true
+  },
+  "notifications": {
+    "console": true,
+    "log": true,
+    "email": false,
+    "webhook": false
+  }
+}

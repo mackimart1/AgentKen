@@ -1,0 +1,48 @@
+{
+  "system": {
+    "discovery_paths": [
+      "modules",
+      "agents",
+      "tools",
+      "extensions"
+    ],
+    "auto_initialize": true,
+    "auto_migrate": true,
+    "backup_existing": true
+  },
+  "modules": {
+    "cache_dir": "module_cache",
+    "temp_dir": "temp",
+    "backup_dir": "module_backups",
+    "max_file_size": 104857600,
+    "supported_formats": [
+      "py",
+      "zip",
+      "tar.gz"
+    ]
+  },
+  "lifecycle": {
+    "auto_update": false,
+    "update_check_interval": 86400,
+    "backup_before_update": true,
+    "rollback_on_failure": true
+  },
+  "composition": {
+    "enable_parallel": true,
+    "max_parallel_steps": 10,
+    "default_timeout": 300,
+    "retry_failed_steps": true
+  },
+  "monitoring": {
+    "health_check_interval": 300,
+    "performance_tracking": true,
+    "error_reporting": true,
+    "usage_analytics": true
+  },
+  "security": {
+    "validate_modules": true,
+    "sandbox_execution": false,
+    "allowed_imports": [],
+    "restricted_operations": []
+  }
+}
