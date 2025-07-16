@@ -44,7 +44,7 @@ class ModelConfig:
         # OpenRouter configuration
         self.api_key = get_env_var(
             "OPENROUTER_API_KEY",
-            "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",
+            "API-KEY",
         )
         self.base_url = get_env_var(
             "OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"
